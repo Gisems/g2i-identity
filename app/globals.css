@@ -1,0 +1,114 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Paleta y tipografía del manual de marca G2I (mismas que el CRM ChatG2I):
+   teal #004952, coral #ed7755, amarillo #ffdf9f. */
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #001b1f;
+  --card: #ffffff;
+  --card-foreground: #001b1f;
+  --popover: #ffffff;
+  --popover-foreground: #001b1f;
+  --primary: #004952;
+  --primary-dark: #00363d;
+  --primary-light: #00707c;
+  --primary-foreground: #ffffff;
+  --secondary: #ffdf9f;
+  --secondary-foreground: #001b1f;
+  --accent: #ed7755;
+  --accent-hover: #ff8f70;
+  --accent-light: #ffb199;
+  /* Texto oscuro sobre coral: el blanco no alcanza contraste AA. */
+  --accent-foreground: #001b1f;
+  --muted: #f5f8f8;
+  --muted-foreground: #5c6969;
+  --success: #4caf50;
+  --warning: #ffb74d;
+  --destructive: #d9534f;
+  --success-text: #2a6b2e;
+  --warning-text: #7a4b00;
+  --error-text: #a8312d;
+  --border: #ccdbdc;
+  --input: #ccdbdc;
+  --ring: #00707c;
+  --sidebar: #004952;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #ed7755;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255, 255, 255, 0.12);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #00707c;
+
+  --shadow-hero: 0 30px 60px rgba(0, 27, 31, 0.18);
+  --gradient-primary: linear-gradient(135deg, #004952 0%, #00707c 100%);
+  --gradient-accent: linear-gradient(135deg, #ff8d6e 0%, #ffb199 100%);
+  --gradient-secondary: linear-gradient(135deg, #ffdf9f 0%, #ffcf6e 100%);
+  --gradient-hero: radial-gradient(120% 100% at 0% 0%, #d7e8e9 0%, #f5f8f8 55%, #ffffff 100%);
+}
+
+@theme inline {
+  --font-display: var(--font-space-grotesk), sans-serif;
+  --font-sans: var(--font-plex-sans), sans-serif;
+  --font-mono: var(--font-plex-mono), monospace;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-light: var(--accent-light);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-success-text: var(--success-text);
+  --color-warning-text: var(--warning-text);
+  --color-error-text: var(--error-text);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-bold tracking-tight;
+  }
+}
