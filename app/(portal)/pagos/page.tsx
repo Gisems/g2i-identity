@@ -40,6 +40,7 @@ export default async function PagosPage({ searchParams }: PageProps<"/pagos">) {
     .from("installments")
     .select("id, concept, amount, due_date, paid_date, payment_method, operation_number, status, payments!inner(projects!inner(id, title, currency, clients!inner(id, name)))")
     .neq("status", "anulada")
+    .neq("payments.projects.clients.status", "inactivo")
     .order("due_date");
 
   const all = (data ?? []) as unknown as Row[];
@@ -72,8 +73,8 @@ export default async function PagosPage({ searchParams }: PageProps<"/pagos">) {
   return (
     <>
       <Topbar
-        title="Pagos"
-        sub="Cuotas de todos los proyectos"
+        title="Pagos de clientes"
+        sub="Lo que los clientes pagan por sus proyectos. Los gastos y sueldos de la empresa están en Finanzas."
         actions={<Link href="/pagos/nuevo" className={btn("cta")}><Plus /> Agregar pago</Link>}
       />
 
@@ -86,7 +87,7 @@ export default async function PagosPage({ searchParams }: PageProps<"/pagos">) {
         ]}
       />
 
-      {error && <div className="form-error" role="alert">No se pudieron cargar los pagos: {error.message}</div>}
+      {error && <div className="form-error" role="alert">No se pudieron cargar los pagos de clientes: {error.message}</div>}
 
       <Panel>
         <div className="filters">
