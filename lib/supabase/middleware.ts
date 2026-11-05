@@ -21,7 +21,9 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // getClaims valida el JWT localmente (sin ir a Supabase en cada petición cuando usa claves asimétricas).
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC.some((p) => path === p || path.startsWith(p + "/"));
 

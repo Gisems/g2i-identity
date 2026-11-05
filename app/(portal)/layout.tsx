@@ -3,26 +3,22 @@ import AppSidebar from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { createClient } from "@/lib/supabase/server";
-import { teamManagerId } from "@/lib/team";
+import { getProfile, getSessionUser } from "@/lib/session";
 import "../portal.css";
 
 export default async function PortalLayout({ children, drawer }: { children: React.ReactNode; drawer: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user) redirect("/login");
 
   // Debe existir en public.users y estar activo (RLS ya lo exige para leer datos).
-  const { data: perfil } = await supabase
-    .from("users")
-    .select("name, role, active")
-    .eq("id", user.id)
-    .maybeSingle();
+  const perfil = await getProfile();
   if (!perfil || !perfil.active) {
+    const supabase = await createClient();
     await supabase.auth.signOut();
     redirect("/login?error=sin-acceso");
   }
 
-  const canManageTeam = !!(await teamManagerId());
+  const canManageTeam = perfil.role === "admin";
 
   return (
     <SidebarProvider>

@@ -1,16 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/session";
 
-/**
- * Solo la persona cuyo correo está en SUPER_ADMIN_EMAIL (y que además sea admin activo)
- * puede ver y usar la sección de colaboradores. Otros admins no.
- * Devuelve el id del usuario, o null si no tiene permiso.
- */
+/** Id del usuario si es admin activo (cuentas, sueldos y colaboradores), o null. */
+export async function adminId(): Promise<string | null> {
+  const p = await getProfile();
+  return p?.active && p.role === "admin" ? p.id : null;
+}
+
+/** Cualquier admin activo puede gestionar colaboradores. */
 export async function teamManagerId(): Promise<string | null> {
-  const owner = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
-  if (!owner) return null;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user || user.email?.toLowerCase() !== owner) return null;
-  const { data } = await supabase.from("users").select("role, active").eq("id", user.id).maybeSingle();
-  return data?.active && data.role === "admin" ? user.id : null;
+  return adminId();
 }
