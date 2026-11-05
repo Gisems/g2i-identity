@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>G2I Digital · Portal de clientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Manual de marca G2I: Space Grotesk = titulares, Satoshi = texto, IBM Plex Mono = detalles -->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   TOKENS DE MARCA (copiados del :root de g2i.netlify.app)
+   ===================================================================== */
+:root {
+  --radius: 0.625rem;
+
+  --background: #ffffff;
+  --background-primary: #004952;
+  --background-primary-subtle: #f5f8f8;
+  --background-accent-subtle: #fdf8f7;
+  --background-secondary-subtle: #faf7f1;
+  --background-neutral: #e8ecec;
+
+  --foreground: #001b1f;
+  --foreground-secondary: #616161;
+  --foreground-muted: #7a8585;
+
+  --primary: #004952;
+  --primary-dark: #00363d;
+  --primary-light: #00707c;
+
+  --accent: #ed7755;
+  --accent-hover: #ff8f70;
+  --accent-light: #ffb199;
+
+  --secondary: #ffdf9f;
+
+  --border: #ccdbdc;
+  --border-accent: #ffd5cd;
+  --border-secondary: #ffdf9f;
+
+  --success: #4caf50;
+  --warning: #ffb74d;
+  --destructive: #d9534f;
+
+  --shadow-card: 0 1px 3px rgba(0, 27, 31, 0.06), 0 4px 16px rgba(0, 27, 31, 0.06);
+  --shadow-card-hover: 0 4px 24px rgba(0, 27, 31, 0.12);
+  --shadow-button: 0 10px 24px rgba(255, 141, 110, 0.35);
+
+  --gradient-primary: linear-gradient(135deg, #004952 0%, #00707c 100%);
+  --gradient-footer: linear-gradient(180deg, #004952 0%, #00363d 100%);
+
+  /* Derivados para texto y fondos de estado (los tonos de marca en claro no llegan a contraste AA como texto) */
+  --text-2: #4d5a5a;          /* texto secundario */
+  --text-3: #5c6969;          /* texto terciario, ≥4.5:1 sobre blanco */
+  --ok-bg: #e5f3e6;   --ok-fg: #2a6b2e;
+  --warn-bg: #fff1cf; --warn-fg: #7a4b00;
+  --bad-bg: #fbe8e7;  --bad-fg: #a8312d;
+  --info-bg: #dcecee; --info-fg: #004952;
+  --neutral-bg: #e8ecec; --neutral-fg: #4d5a5a;
+}
+
+:root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); color-scheme: light; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); scroll-behavior: smooth; }
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; min-height: 100%;
+  font-family: "Satoshi", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px; line-height: 1.55; color: var(--foreground); background: var(--background-primary-subtle);
+  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+}
+h1, h2, h3, h4 { font-family: "Space Grotesk", system-ui, sans-serif; font-weight: 700; letter-spacing: -0.03em; margin: 0; }
+.mono { font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 0.92em; letter-spacing: 0; }
+a { color: var(--primary-light); text-underline-offset: 3px; }
+a:hover { color: var(--primary); }
+img { max-width: 100%; }
+:focus-visible { outline: 2px solid var(--primary-light); outline-offset: 2px; border-radius: 4px; }
+::selection { background: var(--primary-light); color: #fff; }
+::placeholder { color: var(--text-3); opacity: 1; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; border: 2px solid var(--background-primary-subtle); }
+::-webkit-scrollbar-thumb:hover { background: var(--foreground-muted); }
+
+/* ---------- Marca ---------- */
+.brand { display: inline-flex; align-items: baseline; gap: 2px; text-decoration: none; color: #fff; font-family: "Space Grotesk", sans-serif; letter-spacing: -0.04em; }
+.brand b { font-size: 28px; font-weight: 700; }
+.brand span { font-size: 19px; font-weight: 500; color: var(--accent-light); letter-spacing: -0.02em; }
+.brand:hover { color: #fff; }
+.brand.dark { color: var(--primary); }
+.brand.dark span { color: var(--accent); }
+.brand img { height: 30px; } /* si usas el logo en imagen */
+
+/* ---------- Login ---------- */
+.login { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+.login-art { position: relative; overflow: hidden; background: var(--gradient-primary); color: #fff; padding: 40px 56px; display: flex; flex-direction: column; justify-content: space-between; }
+.login-art .blob { position: absolute; border-radius: 50%; pointer-events: none; }
+.login-art .b1 { width: 520px; height: 520px; right: -160px; top: -120px; background: radial-gradient(circle, rgba(237,119,85,.55) 0%, transparent 68%); }
+.login-art .b2 { width: 460px; height: 460px; left: -140px; bottom: -160px; background: radial-gradient(circle, rgba(255,223,159,.35) 0%, transparent 68%); animation-delay: -6s; }
+.login-art > *:not(.blob) { position: relative; }
+.login-copy h1 { font-size: clamp(34px, 4.2vw, 54px); line-height: 1.05; max-width: 14ch; }
+.login-copy p { margin: 18px 0 0; font-size: 18px; color: #d3e4e6; max-width: 36ch; }
+.login-foot { margin: 0; font-size: 13px; color: #b5cdd0; }
+.login-form { display: grid; place-items: center; padding: 32px 24px; background: var(--background); }
+.login-card { width: min(400px, 100%); }
+.login-card .brand { margin-bottom: 28px; display: none; }
+.login-card h2 { font-size: 28px; line-height: 1.15; }
+.login-card .lead { margin: 6px 0 24px; color: var(--text-2); }
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 84px; }
+.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font: inherit; font-size: 13px; font-weight: 700; color: var(--primary-light); background: none; border: 0; padding: 6px 8px; cursor: pointer; border-radius: 6px; }
+.pw-toggle:hover { background: var(--background-primary-subtle); }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: -4px 0 18px; font-size: 14px; }
+.linkbtn { font: inherit; font-weight: 700; font-size: 14px; background: none; border: 0; padding: 0; color: var(--primary-light); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.form-error { background: var(--bad-bg); color: var(--bad-fg); padding: 10px 12px; border-radius: var(--radius); font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+.form-ok { background: var(--ok-bg); color: var(--ok-fg); padding: 10px 12px; border-radius: var(--radius); font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+.field-error { color: var(--bad-fg); font-size: 13px; margin-top: 4px; font-weight: 500; }
+input[aria-invalid="true"] { border-color: var(--destructive); }
+.login-note { margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-3); }
+
+/* ---------- Layout app ---------- */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.sidebar { background: var(--gradient-footer); color: #c6d9db; padding: 24px 14px; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 0; height: 100vh; }
+.sidebar .brand { padding: 0 10px; }
+.nav { display: flex; flex-direction: column; gap: 2px; }
+.nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; color: #c6d9db; text-decoration: none; font-weight: 500; transition: background .15s, color .15s; }
+.nav a:hover { background: rgba(255,255,255,.07); color: #fff; }
+.nav a[aria-current="page"] { background: rgba(255,255,255,.13); color: #fff; font-weight: 700; }
+.nav a[aria-current="page"] svg { color: var(--accent-hover); }
+.nav .count { margin-left: auto; font-size: 12px; font-weight: 700; background: var(--accent); color: var(--foreground); padding: 0 7px; border-radius: 20px; }
+.nav .count:empty { display: none; }
+.side-foot { margin-top: auto; padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.12); font-size: 13px; display: flex; align-items: center; gap: 10px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--foreground); font-weight: 700; font-size: 12px; flex: none; }
+.who { min-width: 0; line-height: 1.3; }
+.who strong { display: block; color: #fff; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.logout { margin-left: auto; background: none; border: 0; color: #c6d9db; cursor: pointer; padding: 7px; border-radius: 6px; display: grid; }
+.logout:hover { color: #fff; background: rgba(255,255,255,.1); }
+
+main { padding: 30px 40px 64px; min-width: 0; max-width: 1320px; width: 100%; }
+.topbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.topbar h1 { font-size: 30px; line-height: 1.15; }
+.topbar .sub { color: var(--text-2); font-size: 15px; margin: 4px 0 0; }
+.topbar .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Controles ---------- */
+.btn { font: inherit; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--background); color: var(--foreground); cursor: pointer; transition: background .15s, border-color .15s, box-shadow .2s, transform .1s; text-decoration: none; }
+.btn:hover { border-color: var(--primary-light); color: var(--primary); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+.btn.cta { background: var(--accent); border-color: var(--accent); color: var(--foreground); }
+.btn.cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--foreground); box-shadow: var(--shadow-button); }
+.btn.ghost { border-color: transparent; background: none; color: var(--primary-light); padding: 6px 8px; }
+.btn.ghost:hover { background: var(--background-primary-subtle); }
+.btn.small { padding: 5px 11px; font-size: 13px; }
+.btn.block { width: 100%; padding: 12px 16px; font-size: 15px; }
+.btn:disabled { background: var(--background-neutral); border-color: var(--background-neutral); color: var(--text-3); cursor: not-allowed; box-shadow: none; }
+.btn svg { width: 16px; height: 16px; }
+.btn .spin { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+input, select, textarea { font: inherit; font-size: 15px; color: var(--foreground); background: var(--background); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; width: 100%; transition: border-color .15s, box-shadow .15s; }
+input:hover, select:hover, textarea:hover { border-color: var(--foreground-muted); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(0, 112, 124, .18); }
+input[type=file] { padding: 7px 10px; }
+input[type=file]::file-selector-button { font: inherit; font-weight: 700; font-size: 13px; margin-right: 10px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--background-primary-subtle); color: var(--primary); cursor: pointer; }
+textarea { resize: vertical; min-height: 76px; }
+label { display: block; font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 5px; }
+.field { margin-bottom: 15px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.hint { font-size: 12.5px; color: var(--text-3); margin-top: 4px; }
+
+/* ---------- Superficies ---------- */
+.panel { background: var(--background); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); }
+.panel-head { display: flex; align-items: center; gap: 10px; padding: 15px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.panel-head h2 { font-size: 18px; }
+.panel-head .btn:last-child { margin-left: auto; }
+.panel-body { padding: 18px 20px; }
+.stack { display: grid; gap: 18px; }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; padding: 2px 10px; border-radius: 20px; white-space: nowrap; background: var(--neutral-bg); color: var(--neutral-fg); }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.badge.ok { background: var(--ok-bg); color: var(--ok-fg); }
+.badge.warn { background: var(--warn-bg); color: var(--warn-fg); }
+.badge.bad { background: var(--bad-bg); color: var(--bad-fg); }
+.badge.info { background: var(--info-bg); color: var(--info-fg); }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: inherit; font-size: 13px; font-weight: 700; padding: 5px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--background); color: var(--text-2); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.chip:hover { border-color: var(--primary-light); color: var(--primary); }
+.chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: #fff; }
+.chip .n { opacity: .75; margin-left: 5px; font-weight: 500; }
+
+/* ---------- Tablas ---------- */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+th { text-align: left; font-weight: 700; font-size: 13px; color: var(--text-3); padding: 11px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--background-primary-subtle); }
+th:first-child { border-top-left-radius: var(--radius); } th:last-child { border-top-right-radius: var(--radius); }
+td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr.clickable { cursor: pointer; transition: background .12s; }
+tbody tr.clickable:hover { background: var(--background-primary-subtle); }
+td.num, th.num { text-align: right; }
+.cell-main { font-weight: 700; }
+.cell-sub { font-size: 13px; color: var(--text-3); }
+.muted { color: var(--text-3); }
+.late { color: var(--bad-fg); font-weight: 700; }
+
+.filters { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
+.search { flex: 1 1 260px; position: relative; max-width: 380px; }
+.search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-3); pointer-events: none; }
+.search input { padding-left: 36px; }
+
+/* ---------- Indicadores ---------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin-bottom: 20px; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-card); overflow: hidden; }
+.stat { padding: 16px 20px; border-right: 1px solid var(--border); }
+.stat:last-child { border-right: 0; }
+.stat .v { font-family: "Space Grotesk", sans-serif; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.2; }
+.stat .l { font-size: 13.5px; color: var(--text-2); }
+.stat.alert .v { color: var(--bad-fg); }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.list li { display: flex; gap: 14px; padding: 13px 20px; border-bottom: 1px solid var(--border); align-items: center; }
+.list li:last-child { border-bottom: 0; }
+.list li[data-cita] { cursor: pointer; }
+.list li[data-cita]:hover { background: var(--background-primary-subtle); }
+.time { font-weight: 500; min-width: 56px; font-size: 14px; color: var(--primary); }
+.list .grow { flex: 1; min-width: 0; }
+.list .t { font-weight: 700; }
+.list .s { font-size: 13.5px; color: var(--text-3); }
+.empty { padding: 32px 20px; text-align: center; color: var(--text-3); font-size: 14.5px; }
+.empty strong { display: block; color: var(--foreground); font-size: 15px; margin-bottom: 2px; }
+
+.today { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; align-items: start; }
+.funnel { display: grid; gap: 12px; }
+.funnel-row { display: grid; grid-template-columns: 96px 1fr 32px; gap: 12px; align-items: center; font-size: 14px; }
+.bar { height: 10px; background: var(--background-neutral); border-radius: 10px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--primary-light); border-radius: 10px; }
+.bar.ok i { background: var(--success); } .bar.warn i { background: var(--warning); } .bar.bad i { background: var(--destructive); }
+.score { display: flex; align-items: center; gap: 10px; min-width: 120px; font-weight: 700; }
+.score .bar { flex: 1; height: 8px; }
+
+/* ---------- Ficha de cliente ---------- */
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; color: var(--text-2); text-decoration: none; margin-bottom: 14px; }
+.back:hover { color: var(--primary); }
+.client-head { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-bottom: 22px; }
+.client-logo { width: 68px; height: 68px; border-radius: 16px; display: grid; place-items: center; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px; color: #fff; flex: none; }
+.client-head h1 { font-size: 30px; line-height: 1.15; }
+.client-head .meta { color: var(--text-2); font-size: 14.5px; display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
+.client-head .actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; }
+.tabs button { font: inherit; font-size: 14.5px; font-weight: 700; background: none; border: 0; cursor: pointer; padding: 11px 16px; color: var(--text-2); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button:hover { color: var(--primary); }
+.tabs button[aria-selected="true"] { color: var(--primary); border-bottom-color: var(--accent); }
+.tabs .n { font-size: 12px; background: var(--background-neutral); color: var(--text-2); border-radius: 20px; padding: 0 7px; margin-left: 6px; }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: start; }
+dl.facts { display: grid; grid-template-columns: 150px 1fr; gap: 11px 14px; margin: 0; font-size: 14.5px; }
+dl.facts dt { color: var(--text-3); }
+dl.facts dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+.swatch { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.swatch i { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); }
+
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline li { display: grid; grid-template-columns: 38px 1fr; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.timeline li:last-child { border-bottom: 0; }
+.ticon { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--info-bg); color: var(--primary); }
+.ticon svg { width: 17px; height: 17px; }
+.timeline .head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.timeline p { margin: 5px 0 0; font-size: 14.5px; color: var(--text-2); }
+.next { margin-top: 8px; font-size: 13.5px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--warn-bg); color: var(--warn-fg); font-weight: 700; padding: 6px 10px; border-radius: 8px; width: fit-content; }
+.next.done { background: var(--ok-bg); color: var(--ok-fg); }
+.progress { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.progress .bar { flex: 1; min-width: 80px; }
+
+/* ---------- Agenda ---------- */
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--background); }
+.seg button { font: inherit; font-size: 14px; font-weight: 700; background: none; border: 0; padding: 8px 16px; color: var(--text-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--primary); color: #fff; }
+.agenda-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.agenda-bar .range { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; margin: 0 6px; }
+.agenda-bar .right { margin-left: auto; }
+.week { overflow-x: auto; }
+.week-inner { min-width: 840px; }
+.week-head, .week-body { display: grid; grid-template-columns: 56px repeat(7, minmax(0, 1fr)); }
+.week-head { border-bottom: 1px solid var(--border); background: var(--background-primary-subtle); }
+.wh { padding: 10px 8px; text-align: center; border-left: 1px solid var(--border); font-size: 13px; color: var(--text-2); font-weight: 700; text-transform: capitalize; }
+.wh .dn { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font-family: "Space Grotesk", sans-serif; font-size: 17px; color: var(--foreground); margin-top: 2px; }
+.wh.is-today .dn { background: var(--primary); color: #fff; }
+.wh.is-today { color: var(--primary); }
+.hours div { height: 54px; font-size: 12px; color: var(--text-3); text-align: right; padding: 0 8px; transform: translateY(-8px); font-family: "IBM Plex Mono", monospace; }
+.daycol { position: relative; border-left: 1px solid var(--border); background-image: linear-gradient(var(--border) 1px, transparent 1px); background-size: 100% 54px; background-position: 0 0; }
+.daycol.is-today { background-color: rgba(0, 112, 124, .04); }
+.ev { position: absolute; font: inherit; text-align: left; cursor: pointer; border-radius: 8px; padding: 4px 8px; overflow: hidden; border: 1px solid var(--primary-light); background: var(--info-bg); color: var(--primary); font-size: 12.5px; line-height: 1.3; transition: box-shadow .15s; }
+.ev:hover { box-shadow: var(--shadow-card-hover); z-index: 2; }
+.ev b { font-family: "IBM Plex Mono", monospace; font-weight: 500; margin-right: 4px; }
+.ev small { display: block; font-size: 12px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ev.confirmada { background: var(--primary); color: #fff; border-color: var(--primary); }
+.ev.realizada { background: var(--background-neutral); color: var(--text-2); border-color: var(--border); }
+.ev.cancelada, .ev.no_asistio { background: var(--bad-bg); color: var(--bad-fg); border-color: var(--border-accent); text-decoration: line-through; }
+.ev.reprogramada { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--border-secondary); }
+.day { margin-bottom: 20px; }
+.day h3 { font-size: 15px; color: var(--text-2); margin: 0 0 8px; text-transform: capitalize; }
+.day h3.is-today { color: var(--primary); }
+
+/* ---------- Panel lateral (formularios) ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(0, 27, 31, .5); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(540px, 100%); background: var(--background); z-index: 50; transform: translateX(100%); transition: transform .3s cubic-bezier(.16,1,.3,1); display: flex; flex-direction: column; box-shadow: -12px 0 40px rgba(0, 27, 31, .2); padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); visibility: hidden; }
+.drawer.open { transform: none; visibility: visible; }
+.drawer header { display: flex; align-items: center; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+.drawer header h2 { font-size: 21px; }
+.drawer header .btn { margin-left: auto; }
+.drawer .body { padding: 22px 24px; overflow-y: auto; flex: 1; }
+.drawer footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--background-primary-subtle); }
+fieldset { border: 0; padding: 0; margin: 0 0 20px; }
+legend { font-family: "Space Grotesk", sans-serif; font-size: 16px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 12px; padding: 0; }
+.rep-row { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 14px 0; margin-bottom: 10px; background: var(--background-primary-subtle); }
+.rep-row .rm { float: right; }
+.color-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.color-row input[type=color] { width: 44px; height: 38px; padding: 2px; flex: none; cursor: pointer; }
+.hallazgo { display: grid; grid-template-columns: 130px 110px 1fr; gap: 8px; margin-bottom: 8px; }
+.finding { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: baseline; font-size: 14.5px; }
+.finding:last-child { border-bottom: 0; }
+.finding .area { font-weight: 700; min-width: 76px; }
+.drawer .summary { background: var(--background-primary-subtle); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; }
+
+.toast { position: fixed; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translate(-50%, 20px); background: var(--primary-dark); color: #fff; padding: 11px 20px; border-radius: var(--radius); font-weight: 700; font-size: 14.5px; opacity: 0; transition: opacity .2s, transform .25s; z-index: 70; pointer-events: none; box-shadow: var(--shadow-card-hover); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Barra móvil ---------- */
+.mobile-bar { display: none; }
+
+/* ---------- Animaciones de marca (una sola, en el login) ---------- */
+@keyframes hero-float { 0%, 100% { transform: translate3d(0,0,0) scale(1); } 50% { transform: translate3d(22px,-26px,0) scale(1.06); } }
+.hero-float { animation: hero-float 18s ease-in-out infinite; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1040px) { .today, .cols { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .login { grid-template-columns: 1fr; }
+  .login-art { display: none; }
+  .login-card .brand { display: inline-flex; }
+}
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .mobile-bar { display: flex; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--primary); padding: 10px 14px; gap: 4px; overflow-x: auto; align-items: center; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--primary); }
+  .mobile-bar .brand { padding-right: 10px; } .mobile-bar .brand b { font-size: 22px; } .mobile-bar .brand span { font-size: 15px; }
+  .mobile-bar a.m, .mobile-bar button.m { font: inherit; background: none; border: 0; cursor: pointer; color: #c6d9db; text-decoration: none; font-size: 14px; font-weight: 700; padding: 7px 11px; border-radius: 8px; white-space: nowrap; }
+  .mobile-bar a.m[aria-current="page"] { background: rgba(255,255,255,.15); color: #fff; }
+  main { padding: 22px 16px 56px; }
+  .topbar h1, .client-head h1 { font-size: 26px; }
+  .grid-2, .hallazgo { grid-template-columns: 1fr; }
+  dl.facts { grid-template-columns: 1fr; gap: 2px; }
+  dl.facts dd { margin-bottom: 10px; }
+  .stat { border-right: 0; border-bottom: 1px solid var(--border); }
+  .stat:last-child { border-bottom: 0; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<!-- Íconos (sprite SVG, un solo trazo) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-2.5-5.1"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2M8.5 11h5M11 8.5v5"/></symbol>
+    <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 9.5v5M18 9.5v5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h3l2 5-2.5 1.5a11 11 0 0 0 7 7L16 14l5 2v3a2 2 0 0 1-2 2A17 17 0 0 1 3 5a2 2 0 0 1 2-2"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></symbol>
+    <symbol id="i-meet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="13" height="12" rx="2"/><path d="m15.5 10 6-3.5v11l-6-3.5"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/></symbol>
+  </defs>
+</svg>
+
+<!-- =====================================================================
+     LOGIN
+     ===================================================================== -->
+<div class="login" id="login">
+  <section class="login-art">
+    <span class="blob b1 hero-float"></span><span class="blob b2 hero-float"></span>
+    <!-- LOGO: reemplaza por <img src="logo-g2i-blanco.svg" alt="G2I Digital"> -->
+    <a class="brand" href="#" aria-label="G2I Digital"><b>G2I</b><span>digital</span></a>
+    <div class="login-copy">
+      <h1>Clientes, proyectos y cobros en un solo lugar.</h1>
+      <p>Portal interno del equipo de G2I Digital.</p>
+    </div>
+    <p class="login-foot">© G2I Digital 2026. Todos los derechos reservados.</p>
+  </section>
+
+  <section class="login-form">
+    <div class="login-card">
+      <a class="brand dark" href="#" aria-label="G2I Digital"><b>G2I</b><span>digital</span></a>
+
+      <form id="loginForm" novalidate>
+        <h2>Ingresa a tu cuenta</h2>
+        <p class="lead">Usa el correo con el que te invitaron al portal.</p>
+        <div class="form-error" id="loginError" role="alert" hidden></div>
+        <div class="field">
+          <label for="l-email">Correo</label>
+          <input id="l-email" name="email" type="email" autocomplete="username" placeholder="nombre@g2i.com" aria-describedby="l-email-err">
+          <div class="field-error" id="l-email-err" hidden></div>
+        </div>
+        <div class="field">
+          <label for="l-pass">Contraseña</label>
+          <div class="pw-wrap">
+            <input id="l-pass" name="password" type="password" autocomplete="current-password" aria-describedby="l-pass-err">
+            <button type="button" class="pw-toggle" id="pwToggle" aria-controls="l-pass" aria-pressed="false">Mostrar</button>
+          </div>
+          <div class="field-error" id="l-pass-err" hidden></div>
+        </div>
+        <div class="row-between"><span></span><button type="button" class="linkbtn" id="toRecover">Olvidé mi contraseña</button></div>
+        <button class="btn primary block" type="submit" id="loginBtn">Ingresar</button>
+        <p class="login-note">El acceso es solo para el equipo. Si necesitas una cuenta, pídele una invitación a un administrador.</p>
+        <p class="login-note" style="margin-top:10px;padding-top:0;border:0" id="demoNote">Modo demostración: ingresa cualquier correo válido y una contraseña de 6 o más caracteres.</p>
+      </form>
+
+      <form id="recoverForm" novalidate hidden>
+        <h2>Recupera tu contraseña</h2>
+        <p class="lead">Te enviaremos un enlace para crear una nueva.</p>
+        <div class="form-ok" id="recoverOk" role="status" hidden></div>
+        <div class="field">
+          <label for="r-email">Correo</label>
+          <input id="r-email" type="email" autocomplete="username" placeholder="nombre@g2i.com" aria-describedby="r-email-err">
+          <div class="field-error" id="r-email-err" hidden></div>
+        </div>
+        <button class="btn primary block" type="submit" id="recoverBtn">Enviar enlace</button>
+        <p class="login-note" style="border:0;padding-top:0"><button type="button" class="linkbtn" id="toLogin">Volver a ingresar</button></p>
+      </form>
+    </div>
+  </section>
+</div>
+
+<!-- =====================================================================
+     APP
+     ===================================================================== -->
+<div class="app" id="app" hidden>
+  <aside class="sidebar">
+    <a class="brand" href="#panel" aria-label="G2I Digital, ir al panel"><b>G2I</b><span>digital</span></a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#panel" data-nav="panel"><svg width="18" height="18"><use href="#i-home"/></svg>Panel</a>
+      <a href="#clientes" data-nav="clientes"><svg width="18" height="18"><use href="#i-users"/></svg>Clientes</a>
+      <a href="#agenda" data-nav="agenda"><svg width="18" height="18"><use href="#i-cal"/></svg>Agenda<span class="count" id="nav-agenda"></span></a>
+      <a href="#diagnosticos" data-nav="diagnosticos"><svg width="18" height="18"><use href="#i-scan"/></svg>Diagnósticos</a>
+      <a href="#pagos" data-nav="pagos"><svg width="18" height="18"><use href="#i-cash"/></svg>Pagos<span class="count" id="nav-pagos"></span></a>
+    </nav>
+    <div class="side-foot">
+      <div class="avatar" id="userAvatar">G</div>
+      <div class="who"><strong id="userName">Equipo</strong><span>Equipo G2I</span></div>
+      <button class="logout" id="logoutBtn" title="Cerrar sesión" aria-label="Cerrar sesión"><svg width="18" height="18"><use href="#i-out"/></svg></button>
+    </div>
+  </aside>
+
+  <div style="min-width:0">
+    <div class="mobile-bar">
+      <a class="brand" href="#panel"><b>G2I</b><span>digital</span></a>
+      <a class="m" href="#panel" data-nav="panel">Panel</a>
+      <a class="m" href="#clientes" data-nav="clientes">Clientes</a>
+      <a class="m" href="#agenda" data-nav="agenda">Agenda</a>
+      <a class="m" href="#diagnosticos" data-nav="diagnosticos">Diagnósticos</a>
+      <a class="m" href="#pagos" data-nav="pagos">Pagos</a>
+      <button class="m" id="logoutBtnM">Salir</button>
+    </div>
+    <main id="view" tabindex="-1"></main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+  <header><h2 id="drawerTitle"></h2><button class="btn ghost" id="drawerClose" aria-label="Cerrar"><svg width="18" height="18"><use href="#i-x"/></svg></button></header>
+  <form class="body" id="drawerBody"></form>
+  <footer><button class="btn" type="button" id="drawerCancel">Cancelar</button><button class="btn primary" type="submit" form="drawerBody" id="drawerSave">Guardar</button></footer>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   CONEXIÓN CON SUPABASE (cuando estés listo)
+   1. Agrega antes de este script:
+      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"><\/script>
+   2. const supabase = window.supabase.createClient('https://TU-PROYECTO.supabase.co', 'TU-ANON-KEY')
+   3. Login:   await supabase.auth.signInWithPassword({ email, password })
+      Recuperar: await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.origin })
+      Salir:   await supabase.auth.signOut()
+   4. Datos:  await supabase.from('resumen_clientes').select('*')   (las vistas ya están en el script SQL)
+   La ANON KEY es pública por diseño; la seguridad la dan las políticas RLS del script SQL.
+   ===================================================================== */
+
+/* ---------- Utilidades ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => 'S/ ' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const fDate = dt => dt ? dt.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }).replace('.', '') : '—';
+const fDateY = dt => dt ? dt.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }).replace('.', '') : '—';
+const fTime = dt => dt.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false });
+const iso = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
+const daysBetween = (a, b) => Math.round((new Date(b.getFullYear(), b.getMonth(), b.getDate()) - new Date(a.getFullYear(), a.getMonth(), a.getDate())) / 86400000);
+const addDays = (dt, n) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + n);
+const addMonths = (dt, n) => new Date(dt.getFullYear(), dt.getMonth() + n, dt.getDate());
+const hace = n => n <= 0 ? 'hoy' : n === 1 ? 'ayer' : `hace ${n} días`;
+const enDias = n => n <= 0 ? 'hoy' : n === 1 ? 'mañana' : `en ${n} días`;
+const initials = n => String(n).split(' ').filter(w => w.length > 2).slice(0, 2).map(w => w[0]).join('').toUpperCase() || String(n)[0]?.toUpperCase() || '?';
+const icon = (id, s = 16) => `<svg width="${s}" height="${s}"><use href="#i-${id}"/></svg>`;
+const weekStartOf = dt => { const x = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* =====================================================================
+   DATOS DE EJEMPLO (reemplazar por consultas a Supabase)
+   HOY está fijo para que el ejemplo se vea consistente; en producción usa new Date().
+   ===================================================================== */
+const HOY = new Date(2026, 10, 4);
+const d = (dd, mm, hh = 0, mi = 0) => new Date(2026, mm - 1, dd, hh, mi);
+
+const db = {
+  servicios: [
+    { id: 's1', nombre: 'Web corporativa' }, { id: 's2', nombre: 'Tienda online' },
+    { id: 's3', nombre: 'Integración CRM / WhatsApp' }, { id: 's4', nombre: 'Producto digital' },
+    { id: 's5', nombre: 'SEO técnico' }, { id: 's6', nombre: 'Mantenimiento y hosting' },
+  ],
+  clientes: [
+    { id: 'c1', nombre: 'Panadería Los Andes', ruc: '20601234567', telefono: '+51 987 654 321', email: 'contacto@losandes.pe', estado: 'activo', origen: 'diagnostico', color: '#b4532a',
+      reps: [{ nombre: 'Rosa Quispe', cargo: 'Gerente general', telefono: '+51 987 654 321', principal: true }, { nombre: 'Luis Quispe', cargo: 'Administración', telefono: '+51 955 112 908' }],
+      det: { rubro: 'Panadería y pastelería', descripcion: 'Tres locales en Lima Norte, pedidos para eventos y delivery propio.', web: 'losandes.pe', redes: { Instagram: '@panaderialosandes', Facebook: '/losandespan', TikTok: '@losandes.pe' }, colores: ['#b4532a', '#f3e2c7', '#2b1d14'], drive: 'https://drive.google.com/drive/folders/ejemplo-losandes' } },
+    { id: 'c2', nombre: 'Clínica Dental Sonríe', ruc: '20587654321', telefono: '+51 944 210 330', email: 'admin@sonrie.pe', estado: 'activo', origen: 'referido', color: '#0f8a86',
+      reps: [{ nombre: 'Dr. Martín Salas', cargo: 'Director', telefono: '+51 944 210 330', principal: true }],
+      det: { rubro: 'Salud dental', descripcion: 'Clínica con dos sedes en Miraflores y Surco.', web: 'sonrie.pe', redes: { Instagram: '@sonrie.pe', Facebook: '/clinicasonrie' }, colores: ['#0f8a86', '#e6f4f3'], drive: '' } },
+    { id: 'c3', nombre: 'Ferretería El Tornillo', ruc: '10456789012', telefono: '+51 913 448 006', email: '', estado: 'prospecto', origen: 'web', color: '#9a7408',
+      reps: [{ nombre: 'Jorge Rivas', cargo: 'Dueño', telefono: '+51 913 448 006', principal: true }],
+      det: { rubro: 'Ferretería', descripcion: 'Quieren vender online a constructoras.', web: 'eltornillo.com.pe', redes: { Facebook: '/ferreteriaeltornillo' }, colores: [], drive: '' } },
+    { id: 'c4', nombre: 'Moda Kuyay', ruc: '20611122233', telefono: '+51 989 300 145', email: 'hola@kuyay.pe', estado: 'prospecto', origen: 'redes', color: '#8e3a8c',
+      reps: [{ nombre: 'Valeria Huamán', cargo: 'Fundadora', telefono: '+51 989 300 145', principal: true }],
+      det: { rubro: 'Ropa de autor', descripcion: 'Vende solo por Instagram, quiere tienda propia.', web: '', redes: { Instagram: '@modakuyay' }, colores: ['#8e3a8c', '#f5d9e8'], drive: '' } },
+    { id: 'c5', nombre: 'Transportes Ruta Sur', ruc: '20499887766', telefono: '+51 922 765 410', email: 'operaciones@rutasur.pe', estado: 'inactivo', origen: 'whatsapp', color: '#33507a',
+      reps: [{ nombre: 'Carlos Medina', cargo: 'Jefe de operaciones', telefono: '+51 922 765 410', principal: true }],
+      det: { rubro: 'Logística', descripcion: 'Web entregada en 2025, sin mantenimiento activo.', web: 'rutasur.pe', redes: { LinkedIn: '/rutasur' }, colores: ['#33507a'], drive: '' } },
+  ],
+  proyectos: [
+    { id: 'p1', cliente: 'c1', servicio: 's2', titulo: 'Tienda online con delivery', estado: 'en_curso', monto: 4800, modalidad: 'cuotas', entrega: d(15, 12),
+      cuotas: [{ n: 1, concepto: 'Adelanto 40%', monto: 1920, vence: d(1, 10), pagado: d(1, 10), metodo: 'Transferencia', operacion: '00482913', comprobante: 'cuota-1.jpg' },
+               { n: 2, concepto: 'Cuota 2', monto: 1440, vence: d(1, 11), pagado: null },
+               { n: 3, concepto: 'Entrega final', monto: 1440, vence: d(15, 12), pagado: null }] },
+    { id: 'p2', cliente: 'c1', servicio: 's6', titulo: 'Mantenimiento mensual', estado: 'aprobado', monto: 150, modalidad: 'recurrente', entrega: null,
+      cuotas: [{ n: 1, concepto: 'Noviembre', monto: 150, vence: d(10, 11), pagado: null }, { n: 2, concepto: 'Diciembre', monto: 150, vence: d(10, 12), pagado: null }] },
+    { id: 'p3', cliente: 'c2', servicio: 's3', titulo: 'Reservas por WhatsApp + CRM', estado: 'en_revision', monto: 3200, modalidad: 'adelanto_saldo', entrega: d(20, 11),
+      cuotas: [{ n: 1, concepto: 'Adelanto 50%', monto: 1600, vence: d(5, 11), pagado: d(4, 11), metodo: 'Yape', operacion: '7731902', comprobante: 'cuota-1.png' },
+               { n: 2, concepto: 'Saldo 50%', monto: 1600, vence: d(20, 11), pagado: null }] },
+    { id: 'p4', cliente: 'c5', servicio: 's1', titulo: 'Web corporativa', estado: 'entregado', monto: 2500, modalidad: 'contado', entrega: d(10, 3),
+      cuotas: [{ n: 1, concepto: 'Pago único', monto: 2500, vence: d(1, 2), pagado: d(1, 2), metodo: 'Transferencia', operacion: '00391820', comprobante: 'pago.pdf' }] },
+  ],
+  contratos: [
+    { id: 'k1', proyecto: 'p1', tipo: 'Servicio', firma: d(28, 9), estado: 'firmado', archivo: 'contrato-tienda-losandes.pdf' },
+    { id: 'k2', proyecto: 'p3', tipo: 'Servicio', firma: d(3, 10), estado: 'firmado', archivo: 'contrato-sonrie.pdf' },
+    { id: 'k3', proyecto: 'p2', tipo: 'Mantenimiento', firma: null, estado: 'enviado', archivo: '' },
+  ],
+  diagnosticos: [
+    { id: 'g1', cliente: 'c1', url: 'losandes.pe', solicitado: d(2, 9), entrega: d(8, 9), estado: 'convertido', puntaje: 38, mockup: 'https://figma.com/ejemplo-losandes', informe: 'informe-losandes.pdf', proyecto: 'p1',
+      hallazgos: [{ area: 'SEO', prioridad: 'alta', texto: 'Las páginas no tienen meta descripción ni títulos únicos.' }, { area: 'Velocidad', prioridad: 'alta', texto: 'Imágenes de 4 MB sin comprimir; la portada tarda 7 s en móvil.' }, { area: 'Conversión', prioridad: 'media', texto: 'No hay botón de pedido por WhatsApp visible.' }] },
+    { id: 'g2', cliente: 'c3', url: 'eltornillo.com.pe', solicitado: d(27, 10), entrega: d(29, 10), estado: 'entregado', puntaje: 45, mockup: '', informe: 'informe-tornillo.pdf', proyecto: null,
+      hallazgos: [{ area: 'Diseño', prioridad: 'media', texto: 'Catálogo en una sola página sin filtros ni buscador.' }, { area: 'SEO', prioridad: 'alta', texto: 'No aparece en Google Maps ni en búsquedas locales.' }, { area: 'Contacto', prioridad: 'baja', texto: 'Formulario sin confirmación de envío.' }] },
+    { id: 'g3', cliente: 'c4', url: 'instagram.com/modakuyay', solicitado: d(2, 11), entrega: null, estado: 'en_analisis', puntaje: null, mockup: '', informe: '', proyecto: null, hallazgos: [] },
+    { id: 'g4', cliente: 'c5', url: 'rutasur.pe', solicitado: d(15, 10), entrega: d(17, 10), estado: 'descartado', puntaje: 71, mockup: '', informe: 'informe-rutasur.pdf', proyecto: null,
+      hallazgos: [{ area: 'Seguridad', prioridad: 'media', texto: 'Certificado SSL vence en 20 días.' }, { area: 'SEO', prioridad: 'baja', texto: 'Falta sitemap.xml.' }] },
+  ],
+  seguimientos: [
+    { cliente: 'c1', fecha: d(2, 9, 10), canal: 'whatsapp', motivo: 'post_diagnostico', resultado: 'interesado', comentario: 'Le enviamos el diagnóstico; quiere ver propuesta de tienda.', prox: null },
+    { cliente: 'c1', fecha: d(20, 9, 16), canal: 'reunion', motivo: 'propuesta', resultado: 'cerrado', comentario: 'Aprobó propuesta de tienda online. Pago en 3 cuotas.', prox: null },
+    { cliente: 'c1', fecha: d(3, 11, 11), canal: 'llamada', motivo: 'cobranza', resultado: 'sin_respuesta', comentario: 'Recordatorio de cuota 2 vencida.', prox: { texto: 'Escribir por WhatsApp sobre cuota 2', fecha: d(5, 11) } },
+    { cliente: 'c2', fecha: d(30, 10, 15), canal: 'reunion', motivo: 'soporte', resultado: 'respondio', comentario: 'Revisión del flujo de reservas. Pidió cambiar textos del bot.', prox: { texto: 'Enviar versión corregida', fecha: d(6, 11) } },
+    { cliente: 'c3', fecha: d(29, 10, 12), canal: 'email', motivo: 'post_diagnostico', resultado: 'sin_respuesta', comentario: 'Envío del informe de diagnóstico.', prox: { texto: 'Llamar para agendar presentación', fecha: d(1, 11), hecha: true } },
+    { cliente: 'c3', fecha: d(1, 11, 17), canal: 'llamada', motivo: 'post_diagnostico', resultado: 'interesado', comentario: 'Agendamos presentación del diagnóstico.', prox: null },
+    { cliente: 'c4', fecha: d(2, 11, 9), canal: 'whatsapp', motivo: 'venta', resultado: 'respondio', comentario: 'Pidió diagnóstico gratis de su Instagram y catálogo.', prox: { texto: 'Entregar diagnóstico', fecha: d(9, 11) } },
+  ],
+  citas: [
+    { id: 'a1', cliente: 'c3', titulo: 'Presentación de diagnóstico', tipo: 'presentacion_diagnostico', inicio: d(4, 11, 10), fin: d(4, 11, 10, 45), modalidad: 'videollamada', lugar: 'meet.google.com/xyz-abcd', estado: 'confirmada', notas: '' },
+    { id: 'a2', cliente: 'c2', titulo: 'Revisión de avance: bot de reservas', tipo: 'revision_avance', inicio: d(4, 11, 16), fin: d(4, 11, 16, 30), modalidad: 'videollamada', lugar: 'meet.google.com/abc-defg', estado: 'agendada', notas: '' },
+    { id: 'a7', cliente: 'c2', titulo: 'Capacitación del panel de reservas', tipo: 'capacitacion', inicio: d(5, 11, 15), fin: d(5, 11, 16), modalidad: 'videollamada', lugar: 'meet.google.com/cap-sonr', estado: 'agendada', notas: '' },
+    { id: 'a3', cliente: 'c1', titulo: 'Revisión de catálogo de productos', tipo: 'revision_avance', inicio: d(6, 11, 11), fin: d(6, 11, 12), modalidad: 'presencial', lugar: 'Local Los Olivos', estado: 'agendada', notas: '' },
+    { id: 'a9', cliente: 'c1', titulo: 'Llamada de cobranza', tipo: 'cobranza', inicio: d(3, 11, 11), fin: d(3, 11, 11, 20), modalidad: 'llamada', lugar: '', estado: 'realizada', notas: '' },
+    { id: 'a4', cliente: 'c4', titulo: 'Reunión inicial', tipo: 'reunion_inicial', inicio: d(10, 11, 18), fin: d(10, 11, 18, 30), modalidad: 'llamada', lugar: '+51 989 300 145', estado: 'agendada', notas: '' },
+    { id: 'a8', cliente: 'c1', titulo: 'Entrega y capacitación de la tienda', tipo: 'entrega', inicio: d(12, 11, 10), fin: d(12, 11, 12), modalidad: 'presencial', lugar: 'Oficina Los Andes', estado: 'agendada', notas: '' },
+    { id: 'a5', cliente: 'c1', titulo: 'Presentación de propuesta', tipo: 'propuesta', inicio: d(20, 9, 16), fin: d(20, 9, 17), modalidad: 'presencial', lugar: 'Oficina G2I', estado: 'realizada', notas: '' },
+    { id: 'a6', cliente: 'c2', titulo: 'Revisión del flujo de reservas', tipo: 'soporte', inicio: d(30, 10, 15), fin: d(30, 10, 15, 40), modalidad: 'videollamada', lugar: '', estado: 'realizada', notas: '' },
+  ],
+};
+db.seguimientos.forEach((s, i) => s.id = 'sg' + i);
+
+const cliente = id => db.clientes.find(c => c.id === id);
+const servicio = id => db.servicios.find(s => s.id === id);
+const proyecto = id => db.proyectos.find(p => p.id === id);
+
+const LABEL = {
+  estado: { prospecto: ['Prospecto', 'info'], activo: ['Activo', 'ok'], inactivo: ['Inactivo', ''], perdido: ['Perdido', 'bad'] },
+  proyecto: { propuesta: ['Propuesta', 'info'], aprobado: ['Aprobado', 'info'], en_curso: ['En curso', 'warn'], en_revision: ['En revisión', 'warn'], entregado: ['Entregado', 'ok'], pausado: ['Pausado', ''], cancelado: ['Cancelado', 'bad'] },
+  cita: { agendada: ['Agendada', 'info'], confirmada: ['Confirmada', 'ok'], realizada: ['Realizada', ''], cancelada: ['Cancelada', 'bad'], reprogramada: ['Reprogramada', 'warn'], no_asistio: ['No asistió', 'bad'] },
+  diag: { solicitado: ['Solicitado', 'info'], en_analisis: ['En análisis', 'warn'], entregado: ['Entregado', 'info'], convertido: ['Convertido en proyecto', 'ok'], descartado: ['Descartado', ''] },
+  resultado: { respondio: ['Respondió', 'info'], sin_respuesta: ['Sin respuesta', 'warn'], interesado: ['Interesado', 'ok'], no_interesado: ['No interesado', 'bad'], cerrado: ['Cerrado', 'ok'], pendiente: ['Pendiente', ''] },
+  contrato: { borrador: ['Borrador', ''], enviado: ['Enviado', 'warn'], firmado: ['Firmado', 'ok'], vencido: ['Vencido', 'bad'], anulado: ['Anulado', ''] },
+  prioridad: { alta: ['Alta', 'bad'], media: ['Media', 'warn'], baja: ['Baja', ''] },
+  canal: { llamada: 'Llamada', whatsapp: 'WhatsApp', email: 'Email', reunion: 'Reunión', redes: 'Redes', otro: 'Otro' },
+  canalIcon: { llamada: 'phone', whatsapp: 'chat', email: 'mail', reunion: 'meet', redes: 'chat', otro: 'chat' },
+  motivo: { venta: 'Venta', post_diagnostico: 'Post diagnóstico', propuesta: 'Propuesta', cobranza: 'Cobranza', soporte: 'Soporte', post_entrega: 'Post entrega', renovacion: 'Renovación', otro: 'Otro' },
+  tipoCita: { reunion_inicial: 'Reunión inicial', presentacion_diagnostico: 'Presentación de diagnóstico', propuesta: 'Propuesta', revision_avance: 'Revisión de avance', entrega: 'Entrega', capacitacion: 'Capacitación', soporte: 'Soporte', cobranza: 'Cobranza', otro: 'Otro' },
+  estadoCita: { agendada: 'Agendada', confirmada: 'Confirmada', realizada: 'Realizada', cancelada: 'Cancelada', reprogramada: 'Reprogramada', no_asistio: 'No asistió' },
+  modalidad: { presencial: 'Presencial', videollamada: 'Videollamada', llamada: 'Llamada' },
+  pagoModo: { contado: 'Contado', cuotas: 'En cuotas', adelanto_saldo: 'Adelanto y saldo', recurrente: 'Recurrente (mensual)' },
+  metodo: { Transferencia: 'Transferencia', Yape: 'Yape', Plin: 'Plin', Tarjeta: 'Tarjeta', Efectivo: 'Efectivo', Otro: 'Otro' },
+  area: { SEO: 'SEO', Velocidad: 'Velocidad', Diseño: 'Diseño', Conversión: 'Conversión', Contenido: 'Contenido', Seguridad: 'Seguridad', Contacto: 'Contacto', Otro: 'Otro' },
+  origen: { diagnostico: 'Diagnóstico gratis', web: 'Formulario web', whatsapp: 'WhatsApp', referido: 'Referido', redes: 'Redes sociales', evento: 'Evento', otro: 'Otro' },
+};
+const badge = (map, key) => { const [t, c] = LABEL[map][key] || [key, '']; return `<span class="badge ${c}">${esc(t)}</span>`; };
+const opts = (map, sel) => Object.entries(map).map(([k, v]) => `<option value="${esc(k)}" ${k === sel ? 'selected' : ''}>${esc(Array.isArray(v) ? v[0] : v)}</option>`).join('');
+
+/* ---------- Cálculos (equivalen a las vistas SQL del script) ---------- */
+const cuotaEstado = q => q.pagado ? 'pagada' : q.vence < HOY ? 'vencida' : 'pendiente';
+const todasCuotas = () => db.proyectos.flatMap(p => p.cuotas.map(q => ({ ...q, p })));
+function resumen(c) {
+  const segs = db.seguimientos.filter(s => s.cliente === c.id).sort((a, b) => b.fecha - a.fecha);
+  const cits = db.citas.filter(a => a.cliente === c.id);
+  const proys = db.proyectos.filter(p => p.cliente === c.id);
+  const pend = proys.flatMap(p => p.cuotas.filter(q => !q.pagado));
+  const proxCita = cits.filter(a => a.inicio >= HOY && ['agendada', 'confirmada'].includes(a.estado)).sort((a, b) => a.inicio - b.inicio)[0];
+  return {
+    seguimientos: segs.length, seg30: segs.filter(s => daysBetween(s.fecha, HOY) <= 30).length, ultimo: segs[0]?.fecha,
+    citas: cits.length, realizadas: cits.filter(a => a.estado === 'realizada').length, noAsistio: cits.filter(a => a.estado === 'no_asistio').length,
+    proxCita, saldo: pend.reduce((t, q) => t + q.monto, 0), vencidas: pend.filter(q => q.vence < HOY).length,
+    activos: proys.filter(p => ['aprobado', 'en_curso', 'en_revision'].includes(p.estado)).length,
+  };
+}
+function genCuotas(modalidad, total, n, primera) {
+  const r2 = x => Math.round(x * 100) / 100, out = [];
+  if (modalidad === 'contado') out.push({ n: 1, concepto: 'Pago único', monto: total, vence: primera });
+  else if (modalidad === 'adelanto_saldo') { const a = r2(total / 2); out.push({ n: 1, concepto: 'Adelanto 50%', monto: a, vence: primera }, { n: 2, concepto: 'Saldo 50%', monto: r2(total - a), vence: addMonths(primera, 1) }); }
+  else if (modalidad === 'cuotas') { const each = Math.floor(total / n * 100) / 100; for (let i = 0; i < n; i++) out.push({ n: i + 1, concepto: `Cuota ${i + 1} de ${n}`, monto: i === n - 1 ? r2(total - each * (n - 1)) : each, vence: addMonths(primera, i) }); }
+  else for (let i = 0; i < n; i++) { const f = addMonths(primera, i); out.push({ n: i + 1, concepto: cap(f.toLocaleDateString('es-PE', { month: 'long' })), monto: total, vence: f }); }
+  return out.map(q => ({ ...q, pagado: null }));
+}
+function marcarRealizada(a) {
+  a.estado = 'realizada';
+  if (!db.seguimientos.some(s => s.citaId === a.id)) // igual que el trigger SQL cita_crea_seguimiento
+    db.seguimientos.push({ id: 'sg' + Date.now(), citaId: a.id, cliente: a.cliente, fecha: a.fin || a.inicio, canal: 'reunion',
+      motivo: { presentacion_diagnostico: 'post_diagnostico', propuesta: 'propuesta', cobranza: 'cobranza', soporte: 'soporte', entrega: 'post_entrega' }[a.tipo] || 'venta',
+      resultado: 'pendiente', comentario: 'Cita realizada: ' + a.titulo, prox: null });
+}
+
+/* =====================================================================
+   SESIÓN
+   ===================================================================== */
+const auth = { user: null };
+const state = { tab: 'resumen', clienteId: null, lastCliente: null, cFilter: 'todos', cq: '', dFilter: 'todos', pFilter: 'pendientes', pq: '', agendaMode: 'semana', weekStart: weekStartOf(HOY) };
+
+function userFromEmail(email) {
+  const name = email.split('@')[0].split(/[._-]/).filter(Boolean).map(cap).join(' ') || 'Equipo';
+  return { email, name };
+}
+function saveSession() { try { auth.user ? sessionStorage.setItem('g2i_user', JSON.stringify(auth.user)) : sessionStorage.removeItem('g2i_user'); } catch (_) {} }
+function restoreSession() { try { const u = sessionStorage.getItem('g2i_user'); if (u) auth.user = JSON.parse(u); } catch (_) {} }
+
+function showLogin() {
+  $('#login').hidden = false; $('#app').hidden = true;
+  $('#loginForm').hidden = false; $('#recoverForm').hidden = true;
+  $('#l-email').focus?.();
+}
+function enterApp() {
+  $('#login').hidden = true; $('#app').hidden = false;
+  $('#userName').textContent = auth.user.name; $('#userAvatar').textContent = initials(auth.user.name);
+  render();
+}
+function logout() { auth.user = null; saveSession(); closeDrawer(); location.hash = ''; showLogin(); }
+
+const fieldErr = (id, msg, inputId) => {
+  const e = $('#' + id), i = $('#' + inputId);
+  e.hidden = !msg; e.textContent = msg || ''; i.setAttribute('aria-invalid', msg ? 'true' : 'false');
+};
+const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+function showLoginError(msg) { const e = $('#loginError'); e.textContent = msg; e.hidden = !msg; }
+function setBusy(btn, busy, label) { btn.disabled = busy; btn.innerHTML = busy ? `<span class="spin" aria-hidden="true"></span>${label}` : label; }
+
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault(); showLoginError('');
+  const email = $('#l-email').value.trim(), pass = $('#l-pass').value;
+  fieldErr('l-email-err', validEmail(email) ? '' : 'Escribe un correo válido, por ejemplo nombre@g2i.com.', 'l-email');
+  fieldErr('l-pass-err', pass.length >= 6 ? '' : 'La contraseña tiene al menos 6 caracteres.', 'l-pass');
+  if (!validEmail(email)) return $('#l-email').focus();
+  if (pass.length < 6) return $('#l-pass').focus();
+  setBusy($('#loginBtn'), true, 'Ingresando…');
+  try {
+    // const { error } = await supabase.auth.signInWithPassword({ email, password: pass }); if (error) throw error;
+    await new Promise(r => setTimeout(r, 600));
+    auth.user = userFromEmail(email); saveSession();
+    $('#l-pass').value = '';
+    enterApp();
+  } catch (err) {
+    showLoginError('El correo o la contraseña no coinciden. Revisa los datos e intenta de nuevo.');
+  } finally { setBusy($('#loginBtn'), false, 'Ingresar'); }
+});
+$('#pwToggle').onclick = () => { const i = $('#l-pass'), show = i.type === 'password'; i.type = show ? 'text' : 'password'; $('#pwToggle').textContent = show ? 'Ocultar' : 'Mostrar'; $('#pwToggle').setAttribute('aria-pressed', show); };
+$('#toRecover').onclick = () => { $('#loginForm').hidden = true; $('#recoverForm').hidden = false; $('#r-email').value = $('#l-email').value; $('#recoverOk').hidden = true; $('#r-email').focus(); };
+$('#toLogin').onclick = () => { $('#recoverForm').hidden = true; $('#loginForm').hidden = false; $('#l-email').focus(); };
+$('#recoverForm').addEventListener('submit', async e => {
+  e.preventDefault(); const email = $('#r-email').value.trim();
+  fieldErr('r-email-err', validEmail(email) ? '' : 'Escribe un correo válido, por ejemplo nombre@g2i.com.', 'r-email');
+  if (!validEmail(email)) return;
+  setBusy($('#recoverBtn'), true, 'Enviando…');
+  // await supabase.auth.resetPasswordForEmail(email, { redirectTo: location.origin })
+  await new Promise(r => setTimeout(r, 600));
+  setBusy($('#recoverBtn'), false, 'Enviar enlace');
+  const ok = $('#recoverOk'); ok.hidden = false; ok.textContent = `Si ${email} tiene una cuenta, recibirá un enlace en unos minutos.`;
+});
+$('#logoutBtn').onclick = logout; $('#logoutBtnM').onclick = logout;
+
+/* =====================================================================
+   VISTAS
+   ===================================================================== */
+const statBlock = items => `<div class="stats">${items.map(([v, l, alert]) => `<div class="stat ${alert ? 'alert' : ''}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('')}</div>`;
+const chipRow = (list, current, key) => `<div class="chips" role="group">${list.map(([k, l, n]) => `<button class="chip" data-chip="${key}:${k}" aria-pressed="${current === k}">${l}${n != null ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>`;
+
+function citaItem(a, withDate = false) {
+  const c = cliente(a.cliente);
+  return `<li data-cita="${a.id}"><div class="time">${withDate ? fDate(a.inicio) : fTime(a.inicio)}</div>
+    <div class="grow"><div class="t">${esc(a.titulo)}</div><div class="s"><a href="#cliente-${c.id}">${esc(c.nombre)}</a> · ${LABEL.modalidad[a.modalidad]}${a.lugar ? ' · ' + esc(a.lugar) : ''}</div></div>
+    ${badge('cita', a.estado)}
+    ${['agendada', 'confirmada'].includes(a.estado) && a.inicio < addDays(HOY, 1) ? `<button class="btn small" data-realizada="${a.id}">Marcar realizada</button>` : ''}</li>`;
+}
+
+const views = {
+  /* ---------------- PANEL ---------------- */
+  panel() {
+    const citasHoy = db.citas.filter(a => sameDay(a.inicio, HOY)).sort((a, b) => a.inicio - b.inicio);
+    const acciones = db.seguimientos.filter(s => s.prox && !s.prox.hecha).sort((a, b) => a.prox.fecha - b.prox.fecha);
+    const pend = todasCuotas().filter(q => !q.pagado), venc = pend.filter(q => q.vence < HOY);
+    const dg = db.diagnosticos;
+    const funnel = [['Solicitados', dg.length], ['Entregados', dg.filter(x => ['entregado', 'convertido', 'descartado'].includes(x.estado)).length], ['Convertidos', dg.filter(x => x.estado === 'convertido').length]];
+    const first = (auth.user?.name || '').split(' ')[0];
+    return `
+      <div class="topbar"><div><h1>Buenos días${first ? ', ' + esc(first) : ''}</h1><p class="sub">${cap(HOY.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }))}</p></div>
+        <div class="actions"><button class="btn" data-act="cita">${icon('cal')}Agendar cita</button><button class="btn cta" data-act="cliente">${icon('plus')}Nuevo cliente</button></div></div>
+      ${statBlock([
+        [citasHoy.length, 'Citas hoy'],
+        [acciones.filter(a => a.prox.fecha <= HOY).length, 'Seguimientos para hoy o atrasados', acciones.some(a => a.prox.fecha < HOY)],
+        [money(venc.reduce((t, q) => t + q.monto, 0)), `${venc.length} cuota${venc.length === 1 ? '' : 's'} vencida${venc.length === 1 ? '' : 's'}`, venc.length > 0],
+        [money(pend.reduce((t, q) => t + q.monto, 0)), 'Por cobrar en total'],
+      ])}
+      <div class="today">
+        <div class="stack">
+          <section class="panel"><div class="panel-head"><h2>Citas de hoy</h2><a class="btn ghost small" href="#agenda">Ver agenda</a></div>
+            ${citasHoy.length ? `<ul class="list">${citasHoy.map(a => citaItem(a)).join('')}</ul>` : `<div class="empty"><strong>No tienes citas hoy</strong>Agenda una reunión con un cliente o prospecto.</div>`}</section>
+          <section class="panel"><div class="panel-head"><h2>Próximas acciones de seguimiento</h2></div>
+            ${acciones.length ? `<ul class="list">${acciones.map(s => {
+              const late = s.prox.fecha < HOY, today = sameDay(s.prox.fecha, HOY);
+              return `<li><div class="grow"><div class="t">${esc(s.prox.texto)}</div><div class="s"><a href="#cliente-${s.cliente}">${esc(cliente(s.cliente).nombre)}</a> · ${LABEL.motivo[s.motivo]}</div></div>
+                <span class="badge ${late ? 'bad' : today ? 'warn' : 'info'}">${late ? 'Atrasado ' + fDate(s.prox.fecha) : today ? 'Hoy' : fDate(s.prox.fecha)}</span>
+                <button class="btn small" data-hecha="${s.id}">Hecho</button></li>`;
+            }).join('')}</ul>` : `<div class="empty"><strong>Sin acciones pendientes</strong>Al registrar un seguimiento puedes dejar la próxima acción.</div>`}</section>
+        </div>
+        <div class="stack">
+          <section class="panel"><div class="panel-head"><h2>Cuotas vencidas</h2><a class="btn ghost small" href="#pagos">Ver pagos</a></div>
+            ${venc.length ? `<ul class="list">${venc.map(q => `<li><div class="grow"><div class="t">${esc(cliente(q.p.cliente).nombre)}</div><div class="s">${esc(q.p.titulo)} · ${esc(q.concepto)}</div></div><div style="text-align:right"><div class="t">${money(q.monto)}</div><div class="s late">venció ${fDate(q.vence)}</div></div></li>`).join('')}</ul>` : `<div class="empty"><strong>Todo al día</strong>No hay cuotas vencidas.</div>`}</section>
+          <section class="panel"><div class="panel-head"><h2>Diagnósticos gratuitos</h2><a class="btn ghost small" href="#diagnosticos">Ver todos</a></div>
+            <div class="panel-body funnel">${funnel.map(([l, v]) => `<div class="funnel-row"><span>${l}</span><div class="bar"><i style="width:${v / Math.max(1, funnel[0][1]) * 100}%"></i></div><strong style="text-align:right">${v}</strong></div>`).join('')}
+            <p class="muted" style="margin:4px 0 0;font-size:14px">Conversión: ${Math.round(funnel[2][1] / Math.max(1, funnel[0][1]) * 100)}% de los diagnósticos se vuelven proyecto</p></div></section>
+        </div>
+      </div>`;
+  },
+
+  /* ---------------- CLIENTES ---------------- */
+  clientes() {
+    const cnt = f => db.clientes.filter(f).length;
+    const chips = [['todos', 'Todos', db.clientes.length], ['activo', 'Activos', cnt(c => c.estado === 'activo')], ['prospecto', 'Prospectos', cnt(c => c.estado === 'prospecto')], ['inactivo', 'Inactivos', cnt(c => c.estado === 'inactivo')],
+      ['deuda', 'Con saldo pendiente', cnt(c => resumen(c).saldo > 0)], ['frio', 'Sin contacto hace 14+ días', cnt(c => { const u = resumen(c).ultimo; return !u || daysBetween(u, HOY) >= 14; })]];
+    return `
+      <div class="topbar"><div><h1>Clientes</h1><p class="sub">${db.clientes.length} registrados</p></div>
+        <div class="actions"><button class="btn cta" data-act="cliente">${icon('plus')}Nuevo cliente</button></div></div>
+      <section class="panel">
+        <div class="filters"><div class="search">${icon('search')}<input id="q" type="search" value="${esc(state.cq)}" placeholder="Buscar por nombre, RUC o representante" aria-label="Buscar clientes"></div>${chipRow(chips, state.cFilter, 'c')}</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Cliente</th><th>Representante</th><th>Estado</th><th class="num">Seguimientos</th><th>Último contacto</th><th>Próxima cita</th><th class="num">Saldo pendiente</th></tr></thead>
+          <tbody id="tbClientes"></tbody></table></div>
+      </section>`;
+  },
+
+  cliente(id) {
+    const c = cliente(id);
+    if (!c) return `<a class="back" href="#clientes">${icon('left')}Clientes</a><div class="panel empty"><strong>No encontramos ese cliente</strong>Puede que se haya eliminado.</div>`;
+    const r = resumen(c), proys = db.proyectos.filter(p => p.cliente === id);
+    const segs = db.seguimientos.filter(s => s.cliente === id).sort((a, b) => b.fecha - a.fecha);
+    const cits = db.citas.filter(a => a.cliente === id).sort((a, b) => b.inicio - a.inicio);
+    const conts = db.contratos.filter(k => proys.some(p => p.id === k.proyecto));
+    const diags = db.diagnosticos.filter(g => g.cliente === id);
+    const tab = state.tab;
+    const tabs = [['resumen', 'Resumen'], ['marca', 'Marca y assets'], ['proyectos', 'Proyectos y pagos', proys.length], ['contratos', 'Contratos', conts.length], ['seguimientos', 'Seguimientos', segs.length], ['citas', 'Citas', cits.length]];
+    let body = '';
+    if (tab === 'resumen') body = `
+      <div class="cols">
+        <section class="panel"><div class="panel-head"><h2>Datos de la empresa</h2><button class="btn small" data-act="cliente" data-arg="${c.id}">Editar</button></div><div class="panel-body">
+          <dl class="facts"><dt>Razón social</dt><dd>${esc(c.nombre)}</dd><dt>RUC</dt><dd class="mono">${esc(c.ruc) || '—'}</dd><dt>Teléfono</dt><dd>${esc(c.telefono) || '—'}</dd><dt>Email</dt><dd>${esc(c.email) || '—'}</dd><dt>Origen</dt><dd>${esc(LABEL.origen[c.origen] || c.origen)}</dd></dl></div></section>
+        <section class="panel"><div class="panel-head"><h2>Representantes</h2></div><ul class="list">
+          ${c.reps.map(p => `<li><div class="avatar" style="background:var(--info-bg);color:var(--primary)">${initials(p.nombre)}</div><div class="grow"><div class="t">${esc(p.nombre)} ${p.principal ? '<span class="badge info">Principal</span>' : ''}</div><div class="s">${esc(p.cargo)}${p.telefono ? ' · ' + esc(p.telefono) : ''}</div></div></li>`).join('') || '<li class="empty" style="width:100%">Sin representantes</li>'}</ul></section>
+        <section class="panel"><div class="panel-head"><h2>Relación con el cliente</h2></div><div class="panel-body">
+          <dl class="facts"><dt>Seguimientos</dt><dd>${r.seguimientos} en total · ${r.seg30} en los últimos 30 días</dd>
+          <dt>Último contacto</dt><dd>${r.ultimo ? `${fDate(r.ultimo)} (${hace(daysBetween(r.ultimo, HOY))})` : 'Sin contacto registrado'}</dd>
+          <dt>Citas</dt><dd>${r.citas} agendadas · ${r.realizadas} realizadas${r.noAsistio ? ` · ${r.noAsistio} no asistió` : ''}</dd>
+          <dt>Próxima cita</dt><dd>${r.proxCita ? `${fDate(r.proxCita.inicio)}, ${fTime(r.proxCita.inicio)} · ${esc(r.proxCita.titulo)}` : 'Ninguna'}</dd>
+          <dt>Saldo pendiente</dt><dd>${money(r.saldo)}${r.vencidas ? ` · <span class="late">${r.vencidas} vencida${r.vencidas > 1 ? 's' : ''}</span>` : ''}</dd></dl></div></section>
+        <section class="panel"><div class="panel-head"><h2>Diagnósticos</h2></div>
+          ${diags.length ? `<ul class="list">${diags.map(g => `<li style="cursor:pointer" data-diag="${g.id}"><div class="grow"><div class="t">${esc(g.url)}</div><div class="s">Solicitado ${fDate(g.solicitado)}${g.puntaje != null ? ` · Puntaje ${g.puntaje}/100 · ${g.hallazgos.length} hallazgos` : ''}</div></div>${badge('diag', g.estado)}</li>`).join('')}</ul>` : `<div class="empty"><strong>Sin diagnósticos</strong>Los diagnósticos gratuitos de este cliente aparecerán aquí.</div>`}</section>
+      </div>`;
+    if (tab === 'marca') body = `
+      <div class="cols">
+        <section class="panel"><div class="panel-head"><h2>Sobre la empresa</h2><button class="btn small" data-act="cliente" data-arg="${c.id}">Editar</button></div><div class="panel-body">
+          <dl class="facts"><dt>Rubro</dt><dd>${esc(c.det.rubro) || '—'}</dd><dt>Descripción</dt><dd>${esc(c.det.descripcion) || '—'}</dd><dt>Web actual</dt><dd>${c.det.web ? `<a href="https://${esc(c.det.web)}" target="_blank" rel="noopener">${esc(c.det.web)}</a>` : '—'}</dd>
+          <dt>Carpeta de assets</dt><dd>${c.det.drive ? `<a href="${esc(c.det.drive)}" target="_blank" rel="noopener">Abrir en Google Drive</a>` : '<span class="muted">Sin carpeta</span>'}</dd>
+          <dt>Accesos</dt><dd class="muted">Guardados en el gestor de contraseñas del equipo</dd></dl></div></section>
+        <section class="panel"><div class="panel-head"><h2>Identidad visual</h2></div><div class="panel-body">
+          <div style="display:flex;gap:16px;align-items:center;margin-bottom:18px"><div class="client-logo" style="background:${esc(c.color)}">${esc(initials(c.nombre))}</div><button class="btn small">Subir logo</button></div>
+          <label>Colores</label><div class="swatches">${c.det.colores.length ? c.det.colores.map(h => `<span class="swatch"><i style="background:${esc(h)}"></i><span class="mono">${esc(h)}</span></span>`).join('') : '<span class="muted">Sin colores registrados</span>'}</div></div></section>
+        <section class="panel"><div class="panel-head"><h2>Redes sociales</h2></div><div class="panel-body">
+          ${Object.keys(c.det.redes).length ? `<dl class="facts">${Object.entries(c.det.redes).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` : '<span class="muted">Sin redes registradas</span>'}</div></section>
+      </div>`;
+    if (tab === 'proyectos') body = `<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn primary" data-act="proyecto" data-arg="${c.id}">${icon('plus')}Nuevo proyecto</button></div>` + (proys.length ? proys.map(p => {
+      const pagado = p.cuotas.filter(q => q.pagado).reduce((t, q) => t + q.monto, 0);
+      return `<section class="panel" style="margin-bottom:18px"><div class="panel-head"><div><h2>${esc(p.titulo)}</h2><div class="cell-sub">${esc(servicio(p.servicio).nombre)} · ${LABEL.pagoModo[p.modalidad]}${p.entrega ? ' · entrega ' + fDate(p.entrega) : ''}</div></div><span style="margin-left:auto">${badge('proyecto', p.estado)}</span></div>
+        <div class="panel-body"><div class="progress"><strong>${money(pagado)}</strong><span class="muted">de ${money(p.monto)}</span><div class="bar ok"><i style="width:${p.monto ? Math.min(100, pagado / p.monto * 100) : 0}%"></i></div></div></div>
+        <div class="table-wrap"><table><thead><tr><th>#</th><th>Concepto</th><th class="num">Monto</th><th>Vence</th><th>Estado</th><th>Comprobante</th></tr></thead><tbody>
+        ${p.cuotas.map(q => `<tr><td>${q.n}</td><td>${esc(q.concepto)}</td><td class="num">${money(q.monto)}</td><td>${fDate(q.vence)}</td>
+          <td>${q.pagado ? `<span class="badge ok">Pagada ${fDate(q.pagado)}</span>` : q.vence < HOY ? '<span class="badge bad">Vencida</span>' : '<span class="badge warn">Pendiente</span>'}</td>
+          <td>${q.pagado ? (q.comprobante ? `<a href="#" onclick="return false">${icon('file', 14)} ${esc(q.comprobante)}</a>` : '<span class="muted">Sin comprobante</span>') : `<button class="btn small" data-act="pago" data-arg="${p.id}|${q.n}">Registrar pago</button>`}</td></tr>`).join('')}
+        </tbody></table></div></section>`;
+    }).join('') : `<div class="panel empty"><strong>Este cliente aún no tiene proyectos</strong>Crea el primero con su plan de pago.</div>`);
+    if (tab === 'contratos') body = `<div style="display:flex;justify-content:flex-end;margin-bottom:14px"><button class="btn primary" data-act="contrato" data-arg="${c.id}" ${proys.length ? '' : 'disabled'}>${icon('plus')}Nuevo contrato</button></div>
+      <section class="panel">${conts.length ? `<div class="table-wrap"><table><thead><tr><th>Proyecto</th><th>Tipo</th><th>Fecha de firma</th><th>Estado</th><th>Archivo</th></tr></thead><tbody>
+      ${conts.map(k => `<tr><td class="cell-main">${esc(proyecto(k.proyecto).titulo)}</td><td>${esc(k.tipo)}</td><td>${fDateY(k.firma)}</td><td>${badge('contrato', k.estado)}</td><td>${k.archivo ? `<a href="#" onclick="return false">${icon('file', 14)} ${esc(k.archivo)}</a>` : '<span class="muted">Sin archivo</span>'}</td></tr>`).join('')}
+      </tbody></table></div>` : `<div class="empty"><strong>Sin contratos registrados</strong>${proys.length ? 'Sube el contrato firmado de un proyecto.' : 'Primero crea un proyecto para este cliente.'}</div>`}</section>`;
+    if (tab === 'seguimientos') body = `<section class="panel"><div class="panel-head"><h2>${segs.length} seguimiento${segs.length === 1 ? '' : 's'} realizado${segs.length === 1 ? '' : 's'}</h2><button class="btn primary small" data-act="seguimiento" data-arg="${c.id}">${icon('plus')}Registrar seguimiento</button></div>
+      ${segs.length ? `<ul class="timeline">${segs.map(s => `<li><div class="ticon">${icon(LABEL.canalIcon[s.canal])}</div><div>
+        <div class="head"><strong>${LABEL.canal[s.canal]} · ${LABEL.motivo[s.motivo]}</strong>${badge('resultado', s.resultado)}<span class="cell-sub">${fDate(s.fecha)}, ${fTime(s.fecha)}</span></div>
+        <p>${esc(s.comentario)}</p>${s.prox ? `<div class="next ${s.prox.hecha ? 'done' : ''}">${s.prox.hecha ? 'Hecho' : 'Siguiente'}: ${esc(s.prox.texto)} · ${fDate(s.prox.fecha)}${s.prox.hecha ? '' : ` <button class="btn small" data-hecha="${s.id}">Marcar hecho</button>`}</div>` : ''}</div></li>`).join('')}</ul>` : `<div class="empty"><strong>Aún no hay contactos registrados</strong>Registra el primer contacto con este cliente.</div>`}</section>`;
+    if (tab === 'citas') body = `<section class="panel"><div class="panel-head"><h2>Citas</h2><button class="btn primary small" data-act="cita" data-arg="${c.id}">${icon('plus')}Agendar cita</button></div>
+      ${cits.length ? `<ul class="list">${cits.map(a => citaItem(a, true)).join('')}</ul>` : `<div class="empty"><strong>Sin citas</strong>Agenda la primera reunión con este cliente.</div>`}</section>`;
+    return `
+      <a class="back" href="#clientes">${icon('left')}Clientes</a>
+      <div class="client-head"><div class="client-logo" style="background:${esc(c.color)}">${esc(initials(c.nombre))}</div>
+        <div><h1>${esc(c.nombre)}</h1><div class="meta"><span>RUC <span class="mono">${esc(c.ruc) || '—'}</span></span><span>${esc(c.telefono)}</span>${badge('estado', c.estado)}</div></div>
+        <div class="actions"><button class="btn" data-act="cita" data-arg="${c.id}">${icon('cal')}Agendar cita</button><button class="btn cta" data-act="seguimiento" data-arg="${c.id}">${icon('plus')}Registrar seguimiento</button></div></div>
+      <div class="tabs" role="tablist">${tabs.map(([k, l, n]) => `<button role="tab" aria-selected="${tab === k}" data-tab="${k}">${l}${n != null ? `<span class="n">${n}</span>` : ''}</button>`).join('')}</div>
+      ${body}`;
+  },
+
+  /* ---------------- AGENDA ---------------- */
+  agenda() {
+    const ini0 = new Date(HOY.getFullYear(), HOY.getMonth(), HOY.getDate());
+    const proxN = db.citas.filter(a => a.inicio >= ini0 && ['agendada', 'confirmada'].includes(a.estado)).length;
+    const modo = state.agendaMode, ws = state.weekStart, we = addDays(ws, 6);
+    const rango = ws.getMonth() === we.getMonth() ? `${ws.getDate()}–${we.getDate()} de ${we.toLocaleDateString('es-PE', { month: 'long' })}` : `${fDate(ws)} – ${fDate(we)}`;
+    const bar = `<div class="agenda-bar">
+      <div class="seg" role="group" aria-label="Vista"><button data-agenda="semana" aria-pressed="${modo === 'semana'}">Semana</button><button data-agenda="lista" aria-pressed="${modo === 'lista'}">Lista</button></div>
+      ${modo === 'semana' ? `<button class="btn small" data-week="-1" aria-label="Semana anterior">${icon('left', 14)}</button><button class="btn small" data-week="0">Hoy</button><button class="btn small" data-week="1" aria-label="Semana siguiente">${icon('right', 14)}</button><span class="range">${rango}</span>` : ''}
+      <div class="right"><button class="btn cta" data-act="cita">${icon('plus')}Agendar cita</button></div></div>`;
+    let body = '';
+    if (modo === 'semana') {
+      const H0 = 8, H1 = 20, PX = 54, days = [...Array(7)].map((_, i) => addDays(ws, i));
+      body = `<section class="panel week"><div class="week-inner">
+        <div class="week-head"><div></div>${days.map(dt => `<div class="wh ${sameDay(dt, HOY) ? 'is-today' : ''}">${dt.toLocaleDateString('es-PE', { weekday: 'short' }).replace('.', '')}<br><span class="dn">${dt.getDate()}</span></div>`).join('')}</div>
+        <div class="week-body"><div class="hours">${[...Array(H1 - H0)].map((_, i) => `<div>${String(H0 + i).padStart(2, '0')}:00</div>`).join('')}</div>
+        ${days.map(dt => {
+          const evs = db.citas.filter(a => sameDay(a.inicio, dt)).sort((a, b) => a.inicio - b.inicio), lanes = [];
+          evs.forEach(a => { let l = lanes.findIndex(end => end <= a.inicio); if (l < 0) { l = lanes.length; lanes.push(0); } lanes[l] = a.fin || new Date(a.inicio.getTime() + 3600000); a._lane = l; });
+          return `<div class="daycol ${sameDay(dt, HOY) ? 'is-today' : ''}" style="height:${(H1 - H0) * PX}px">${evs.map(a => {
+            const sh = a.inicio.getHours() + a.inicio.getMinutes() / 60, eh = a.fin ? a.fin.getHours() + a.fin.getMinutes() / 60 : sh + 1;
+            const top = Math.max(0, (sh - H0) * PX), h = Math.max(30, (Math.min(eh, H1) - Math.max(sh, H0)) * PX - 2), n = lanes.length;
+            return `<button class="ev ${a.estado}" data-cita="${a.id}" style="top:${top}px;height:${h}px;left:calc(${a._lane / n * 100}% + 2px);width:calc(${100 / n}% - 4px)" title="${esc(a.titulo)} · ${esc(cliente(a.cliente).nombre)}"><b>${fTime(a.inicio)}</b>${esc(a.titulo)}<small>${esc(cliente(a.cliente).nombre)}</small></button>`;
+          }).join('')}</div>`;
+        }).join('')}</div></div></section>`;
+    } else {
+      const prox = db.citas.filter(a => a.inicio >= ini0).sort((a, b) => a.inicio - b.inicio), pas = db.citas.filter(a => a.inicio < ini0).sort((a, b) => b.inicio - a.inicio), byDay = {};
+      prox.forEach(a => (byDay[a.inicio.toDateString()] ||= []).push(a));
+      body = (Object.entries(byDay).map(([k, list]) => { const dt = new Date(k); return `<div class="day"><h3 class="${sameDay(dt, HOY) ? 'is-today' : ''}">${sameDay(dt, HOY) ? 'Hoy · ' : ''}${dt.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })}</h3><section class="panel"><ul class="list">${list.map(a => citaItem(a)).join('')}</ul></section></div>`; }).join('')
+        || `<div class="panel empty"><strong>No hay citas próximas</strong>Agenda la próxima reunión.</div>`)
+        + (pas.length ? `<div class="day"><h3>Anteriores</h3><section class="panel"><ul class="list">${pas.map(a => citaItem(a, true)).join('')}</ul></section></div>` : '');
+    }
+    return `<div class="topbar"><div><h1>Agenda</h1><p class="sub">${proxN} cita${proxN === 1 ? '' : 's'} próxima${proxN === 1 ? '' : 's'}</p></div></div>${bar}${body}`;
+  },
+
+  /* ---------------- DIAGNÓSTICOS ---------------- */
+  diagnosticos() {
+    const dg = db.diagnosticos, n = f => dg.filter(f).length;
+    const entreg = n(x => ['entregado', 'convertido', 'descartado'].includes(x.estado)), conv = n(x => x.estado === 'convertido');
+    const chips = [['todos', 'Todos', dg.length], ['curso', 'En curso', n(x => ['solicitado', 'en_analisis'].includes(x.estado))], ['entregado', 'Entregados', n(x => x.estado === 'entregado')], ['convertido', 'Convertidos', conv], ['descartado', 'Descartados', n(x => x.estado === 'descartado')]];
+    return `
+      <div class="topbar"><div><h1>Diagnósticos gratuitos</h1><p class="sub">Análisis de la web actual, puntos de mejora y propuesta visual</p></div>
+        <div class="actions"><button class="btn cta" data-act="diagnostico">${icon('plus')}Nuevo diagnóstico</button></div></div>
+      ${statBlock([[dg.length, 'Solicitados'], [n(x => ['solicitado', 'en_analisis'].includes(x.estado)), 'Por entregar'], [entreg, 'Entregados'], [Math.round(conv / Math.max(1, entreg) * 100) + '%', 'Se convirtieron en proyecto']])}
+      <section class="panel"><div class="filters">${chipRow(chips, state.dFilter, 'd')}</div>
+        <div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Web analizada</th><th>Solicitado</th><th>Puntaje</th><th class="num">Hallazgos</th><th class="num">Seguimientos</th><th>Estado</th></tr></thead><tbody id="tbDiag"></tbody></table></div></section>`;
+  },
+
+  /* ---------------- PAGOS ---------------- */
+  pagos() {
+    const all = todasCuotas(), pend = all.filter(q => !q.pagado), venc = pend.filter(q => q.vence < HOY);
+    const mes = all.filter(q => q.pagado && q.pagado.getMonth() === HOY.getMonth() && q.pagado.getFullYear() === HOY.getFullYear());
+    const prox7 = pend.filter(q => q.vence >= HOY && q.vence <= addDays(HOY, 7));
+    const chips = [['pendientes', 'Pendientes', pend.length], ['vencidas', 'Vencidas', venc.length], ['pagadas', 'Pagadas', all.length - pend.length], ['todas', 'Todas', all.length]];
+    return `
+      <div class="topbar"><div><h1>Pagos</h1><p class="sub">Cuotas de todos los proyectos</p></div></div>
+      ${statBlock([
+        [money(mes.reduce((t, q) => t + q.monto, 0)), `Cobrado en ${HOY.toLocaleDateString('es-PE', { month: 'long' })}`],
+        [money(pend.reduce((t, q) => t + q.monto, 0)), `Por cobrar · ${pend.length} cuotas`],
+        [money(venc.reduce((t, q) => t + q.monto, 0)), `Vencido · ${venc.length} cuota${venc.length === 1 ? '' : 's'}`, venc.length > 0],
+        [money(prox7.reduce((t, q) => t + q.monto, 0)), 'Vence en los próximos 7 días'],
+      ])}
+      <section class="panel"><div class="filters"><div class="search">${icon('search')}<input id="pq" type="search" value="${esc(state.pq)}" placeholder="Buscar por cliente o proyecto" aria-label="Buscar pagos"></div>${chipRow(chips, state.pFilter, 'p')}</div>
+        <div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Proyecto</th><th>Concepto</th><th class="num">Monto</th><th>Vence</th><th>Estado</th><th>Comprobante</th></tr></thead><tbody id="tbPagos"></tbody></table></div></section>`;
+  },
+};
+
+/* ---------- Tablas dinámicas ---------- */
+function renderClientesTabla() {
+  const q = state.cq.toLowerCase().trim(), f = state.cFilter;
+  const rows = db.clientes.filter(c => {
+    const r = resumen(c);
+    const okF = f === 'todos' || f === c.estado || (f === 'deuda' && r.saldo > 0) || (f === 'frio' && (!r.ultimo || daysBetween(r.ultimo, HOY) >= 14));
+    return okF && (!q || [c.nombre, c.ruc, ...c.reps.map(x => x.nombre)].join(' ').toLowerCase().includes(q));
+  });
+  $('#tbClientes').innerHTML = rows.length ? rows.map(c => {
+    const r = resumen(c), rep = c.reps.find(x => x.principal) || c.reps[0], dias = r.ultimo ? daysBetween(r.ultimo, HOY) : null;
+    return `<tr class="clickable" data-go="cliente-${c.id}">
+      <td><div class="cell-main">${esc(c.nombre)}</div><div class="cell-sub mono">${esc(c.ruc) || 'Sin RUC'}</div></td>
+      <td>${esc(rep?.nombre) || '—'}<div class="cell-sub">${esc(rep?.telefono)}</div></td>
+      <td>${badge('estado', c.estado)}</td><td class="num"><strong>${r.seguimientos}</strong></td>
+      <td>${r.ultimo ? `${fDate(r.ultimo)}<div class="cell-sub ${dias >= 14 ? 'late' : ''}">${hace(dias)}</div>` : '<span class="muted">Nunca</span>'}</td>
+      <td>${r.proxCita ? `${fDate(r.proxCita.inicio)}, <span class="mono">${fTime(r.proxCita.inicio)}</span>` : '<span class="muted">—</span>'}</td>
+      <td class="num">${r.saldo ? `${money(r.saldo)}${r.vencidas ? '<div class="cell-sub late">con atraso</div>' : ''}` : '<span class="muted">—</span>'}</td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty"><strong>Ningún cliente coincide</strong>Prueba con otro nombre o quita los filtros.</div></td></tr>`;
+}
+function renderDiagTabla() {
+  const f = state.dFilter;
+  const rows = db.diagnosticos.filter(g => f === 'todos' || (f === 'curso' ? ['solicitado', 'en_analisis'].includes(g.estado) : g.estado === f)).sort((a, b) => b.solicitado - a.solicitado);
+  $('#tbDiag').innerHTML = rows.length ? rows.map(g => {
+    const sc = g.puntaje, tone = sc == null ? '' : sc < 50 ? 'bad' : sc < 75 ? 'warn' : 'ok';
+    return `<tr class="clickable" data-diag="${g.id}"><td class="cell-main">${esc(cliente(g.cliente).nombre)}</td><td>${esc(g.url)}</td><td>${fDate(g.solicitado)}</td>
+      <td>${sc == null ? '<span class="muted">—</span>' : `<div class="score">${sc}<div class="bar ${tone}"><i style="width:${sc}%"></i></div></div>`}</td>
+      <td class="num">${g.hallazgos.length || '—'}</td><td class="num">${db.seguimientos.filter(s => s.cliente === g.cliente && s.motivo === 'post_diagnostico').length}</td><td>${badge('diag', g.estado)}</td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty"><strong>No hay diagnósticos en esta vista</strong>Cambia el filtro o crea uno nuevo.</div></td></tr>`;
+}
+function renderPagosTabla() {
+  const q = state.pq.toLowerCase().trim(), f = state.pFilter;
+  let rows = todasCuotas().filter(x => {
+    const e = cuotaEstado(x);
+    return (f === 'todas' || (f === 'pendientes' && e !== 'pagada') || (f === 'vencidas' && e === 'vencida') || (f === 'pagadas' && e === 'pagada'))
+      && (!q || (cliente(x.p.cliente).nombre + ' ' + x.p.titulo).toLowerCase().includes(q));
+  });
+  rows = f === 'pagadas' ? rows.sort((a, b) => b.pagado - a.pagado) : rows.sort((a, b) => a.vence - b.vence);
+  $('#tbPagos').innerHTML = rows.length ? rows.map(x => {
+    const e = cuotaEstado(x), n = daysBetween(HOY, x.vence);
+    const est = e === 'pagada' ? `<span class="badge ok">Pagada ${fDate(x.pagado)}</span><div class="cell-sub">${esc(x.metodo || '')}${x.operacion ? ' · <span class="mono">' + esc(x.operacion) + '</span>' : ''}</div>`
+      : e === 'vencida' ? `<span class="badge bad">Vencida hace ${-n} día${-n === 1 ? '' : 's'}</span>` : `<span class="badge warn">Vence ${enDias(n)}</span>`;
+    const act = e === 'pagada' ? (x.comprobante ? `<a href="#" onclick="return false">${icon('file', 14)} ${esc(x.comprobante)}</a>` : '<span class="muted">Sin comprobante</span>') : `<button class="btn small primary" data-act="pago" data-arg="${x.p.id}|${x.n}">Registrar pago</button>`;
+    return `<tr><td class="cell-main"><a href="#cliente-${x.p.cliente}">${esc(cliente(x.p.cliente).nombre)}</a></td><td>${esc(x.p.titulo)}</td><td>${esc(x.concepto)}</td><td class="num">${money(x.monto)}</td><td>${fDate(x.vence)}</td><td>${est}</td><td>${act}</td></tr>`;
+  }).join('') : `<tr><td colspan="7"><div class="empty"><strong>No hay cuotas en esta vista</strong>${f === 'vencidas' ? 'No tienes cuotas vencidas.' : 'Cambia el filtro o la búsqueda.'}</div></td></tr>`;
+}
+
+/* =====================================================================
+   FORMULARIOS (panel lateral)
+   ===================================================================== */
+const v = x => esc(x ?? '');
+const clientOptions = sel => db.clientes.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${esc(c.nombre)}</option>`).join('');
+const normArg = a => typeof a === 'string' ? { cliente: a } : (a || {});
+
+const forms = {
+  /* ---- Cliente (nuevo / editar) ---- */
+  cliente: {
+    title: a => a ? 'Editar cliente' : 'Nuevo cliente', save: a => a ? 'Guardar cambios' : 'Guardar cliente',
+    html: a => { const c = a ? cliente(a) : null; return `
+      <fieldset><legend>Empresa</legend>
+        <div class="field"><label for="f-nombre">Nombre o razón social</label><input id="f-nombre" name="nombre" required value="${v(c?.nombre)}"></div>
+        <div class="grid-2"><div class="field"><label for="f-ruc">RUC</label><input id="f-ruc" name="ruc" inputmode="numeric" pattern="\\d{11}" title="11 dígitos" placeholder="11 dígitos" value="${v(c?.ruc)}"></div>
+        <div class="field"><label for="f-tel">Teléfono</label><input id="f-tel" name="telefono" type="tel" placeholder="+51" value="${v(c?.telefono)}"></div></div>
+        <div class="grid-2"><div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" value="${v(c?.email)}"></div>
+        <div class="field"><label for="f-estado">Estado</label><select id="f-estado" name="estado">${opts({ prospecto: 'Prospecto', activo: 'Activo', inactivo: 'Inactivo', perdido: 'Perdido' }, c?.estado || 'prospecto')}</select></div></div>
+        <div class="field"><label for="f-origen">¿Cómo llegó?</label><select id="f-origen" name="origen">${opts(LABEL.origen, c?.origen || 'diagnostico')}</select></div>
+      </fieldset>
+      <fieldset><legend>Representantes</legend><div id="reps"></div><button type="button" class="btn small" id="addRep">${icon('plus', 14)}Agregar representante</button></fieldset>
+      <fieldset><legend>Marca</legend>
+        <div class="field"><label for="f-rubro">Rubro</label><input id="f-rubro" name="rubro" value="${v(c?.det.rubro)}"></div>
+        <div class="field"><label for="f-desc">Detalles de la empresa</label><textarea id="f-desc" name="descripcion">${v(c?.det.descripcion)}</textarea></div>
+        <div class="field"><label for="f-web">Web actual</label><input id="f-web" name="web" placeholder="ejemplo.com" value="${v(c?.det.web)}"></div>
+        <div class="grid-2"><div class="field"><label for="f-ig">Instagram</label><input id="f-ig" name="ig" placeholder="@usuario" value="${v(c?.det.redes.Instagram)}"></div><div class="field"><label for="f-fb">Facebook</label><input id="f-fb" name="fb" value="${v(c?.det.redes.Facebook)}"></div></div>
+        <div class="field"><label>Colores de marca</label><div id="colors"></div><button type="button" class="btn small" id="addColor">${icon('plus', 14)}Agregar color</button></div>
+        <div class="field"><label for="f-logo">Logo</label><input id="f-logo" name="logo" type="file" accept="image/*"><div class="hint">Se guarda en Supabase Storage, bucket “logos”.</div></div>
+        <div class="field"><label for="f-drive">Carpeta de assets en Drive</label><input id="f-drive" name="drive" type="url" placeholder="https://drive.google.com/…" value="${v(c?.det.drive)}"></div>
+      </fieldset>`; },
+    init: a => {
+      const c = a ? cliente(a) : null;
+      const addRep = (r = {}, first = false) => { const div = document.createElement('div'); div.className = 'rep-row'; div.innerHTML = `
+        ${first ? '' : '<button type="button" class="btn ghost small rm">Quitar</button>'}
+        <div class="grid-2"><div class="field"><label>Nombre</label><input name="rep_nombre" ${first ? 'required' : ''} value="${v(r.nombre)}"></div><div class="field"><label>Cargo</label><input name="rep_cargo" value="${v(r.cargo)}"></div></div>
+        <div class="field"><label>Teléfono</label><input name="rep_tel" type="tel" value="${v(r.telefono)}"></div>`; div.querySelector('.rm')?.addEventListener('click', () => div.remove()); $('#reps').append(div); };
+      const addColor = (hex = '#004952') => { const div = document.createElement('div'); div.className = 'color-row'; div.innerHTML = `<input type="color" value="${v(hex)}" aria-label="Color"><input name="color" value="${v(hex)}" aria-label="Código hex" class="mono"><button type="button" class="btn ghost small">Quitar</button>`;
+        const [pick, txt] = div.querySelectorAll('input'); pick.oninput = () => txt.value = pick.value; txt.oninput = () => { if (/^#[0-9a-f]{6}$/i.test(txt.value)) pick.value = txt.value; }; div.querySelector('button').onclick = () => div.remove(); $('#colors').append(div); };
+      (c?.reps.length ? c.reps : [{}]).forEach((r, i) => addRep(r, i === 0));
+      (c?.det.colores.length ? c.det.colores : ['#004952']).forEach(h => addColor(h));
+      $('#addRep').onclick = () => addRep(); $('#addColor').onclick = () => addColor('#ed7755');
+    },
+    submit: (fd, a) => {
+      const names = fd.getAll('rep_nombre'), cargos = fd.getAll('rep_cargo'), tels = fd.getAll('rep_tel');
+      const redes = {}; if (fd.get('ig')) redes.Instagram = fd.get('ig'); if (fd.get('fb')) redes.Facebook = fd.get('fb');
+      const prevRedes = a ? Object.fromEntries(Object.entries(cliente(a).det.redes).filter(([k]) => !['Instagram', 'Facebook'].includes(k))) : {};
+      const data = { nombre: fd.get('nombre'), ruc: fd.get('ruc'), telefono: fd.get('telefono'), email: fd.get('email'), estado: fd.get('estado'), origen: fd.get('origen'),
+        color: fd.getAll('color')[0] || '#004952', reps: names.map((n, i) => ({ nombre: n, cargo: cargos[i], telefono: tels[i], principal: i === 0 })).filter(r => r.nombre),
+        det: { rubro: fd.get('rubro'), descripcion: fd.get('descripcion'), web: fd.get('web'), redes: { ...prevRedes, ...redes }, colores: fd.getAll('color').filter(Boolean), drive: fd.get('drive') } };
+      if (a) { Object.assign(cliente(a), data); toast('Cambios guardados'); render(); }
+      else { const id = 'c' + Date.now(); db.clientes.unshift({ id, ...data }); toast('Cliente guardado'); location.hash = 'cliente-' + id; }
+    },
+  },
+
+  /* ---- Seguimiento ---- */
+  seguimiento: {
+    title: () => 'Registrar seguimiento', save: () => 'Registrar seguimiento',
+    html: a => `
+      <div class="field"><label for="s-cli">Cliente</label><select id="s-cli" name="cliente">${clientOptions(a)}</select></div>
+      <div class="grid-2"><div class="field"><label for="s-canal">Canal</label><select id="s-canal" name="canal">${opts(LABEL.canal)}</select></div>
+      <div class="field"><label for="s-mot">Motivo</label><select id="s-mot" name="motivo">${opts(LABEL.motivo)}</select></div></div>
+      <div class="field"><label for="s-res">Resultado</label><select id="s-res" name="resultado">${opts(LABEL.resultado, 'respondio')}</select></div>
+      <div class="field"><label for="s-com">¿Qué se habló?</label><textarea id="s-com" name="comentario" required></textarea></div>
+      <fieldset><legend>Próxima acción (opcional)</legend>
+        <div class="field"><label for="s-prox">Qué hay que hacer</label><input id="s-prox" name="prox" placeholder="Ej. Enviar propuesta"></div>
+        <div class="field"><label for="s-pf">Para cuándo</label><input id="s-pf" name="proxFecha" type="date" min="${iso(HOY)}"></div></fieldset>`,
+    submit: fd => {
+      const pf = fd.get('proxFecha'), now = new Date();
+      db.seguimientos.push({ id: 'sg' + Date.now(), cliente: fd.get('cliente'), fecha: new Date(HOY.getFullYear(), HOY.getMonth(), HOY.getDate(), now.getHours(), now.getMinutes()), canal: fd.get('canal'), motivo: fd.get('motivo'), resultado: fd.get('resultado'), comentario: fd.get('comentario'),
+        prox: fd.get('prox') && pf ? { texto: fd.get('prox'), fecha: new Date(pf + 'T00:00') } : null });
+      toast(`Seguimiento registrado · ${db.seguimientos.filter(s => s.cliente === fd.get('cliente')).length} con este cliente`); render();
+    },
+  },
+
+  /* ---- Cita (nueva) ---- */
+  cita: {
+    title: () => 'Agendar cita', save: () => 'Agendar cita',
+    html: a => `
+      <div class="field"><label for="c-cli">Cliente</label><select id="c-cli" name="cliente">${clientOptions(a)}</select></div>
+      <div class="field"><label for="c-tipo">Tipo de cita</label><select id="c-tipo" name="tipo">${opts(LABEL.tipoCita)}</select></div>
+      <div class="field"><label for="c-tit">Título</label><input id="c-tit" name="titulo" required placeholder="Ej. Presentación de propuesta"></div>
+      <div class="grid-2"><div class="field"><label for="c-fecha">Fecha</label><input id="c-fecha" name="fecha" type="date" required value="${iso(HOY)}"></div>
+      <div class="field"><label for="c-hora">Hora</label><input id="c-hora" name="hora" type="time" required value="10:00"></div></div>
+      <div class="grid-2"><div class="field"><label for="c-dur">Duración</label><select id="c-dur" name="dur"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 hora</option><option value="90">1 h 30 min</option><option value="120">2 horas</option></select></div>
+      <div class="field"><label for="c-mod">Modalidad</label><select id="c-mod" name="modalidad">${opts(LABEL.modalidad, 'videollamada')}</select></div></div>
+      <div class="field"><label for="c-lug">Link o dirección</label><input id="c-lug" name="lugar" placeholder="meet.google.com/… o dirección"></div>
+      <div class="field"><label for="c-not">Notas</label><textarea id="c-not" name="notas"></textarea></div>`,
+    init: () => { $('#c-tipo').onchange = e => { const t = $('#c-tit'); if (!t.value || Object.values(LABEL.tipoCita).includes(t.value)) t.value = LABEL.tipoCita[e.target.value]; }; },
+    submit: fd => {
+      const inicio = new Date(`${fd.get('fecha')}T${fd.get('hora')}`);
+      db.citas.push({ id: 'a' + Date.now(), cliente: fd.get('cliente'), titulo: fd.get('titulo'), tipo: fd.get('tipo'), inicio, fin: new Date(inicio.getTime() + fd.get('dur') * 60000), modalidad: fd.get('modalidad'), lugar: fd.get('lugar'), estado: 'agendada', notas: fd.get('notas') });
+      if (inicio < weekStartOf(HOY) || inicio >= addDays(weekStartOf(HOY), 7)) state.weekStart = weekStartOf(inicio);
+      toast('Cita agendada'); render();
+    },
+  },
+
+  /* ---- Cita (ver / editar) ---- */
+  citaEditar: {
+    title: () => 'Detalle de la cita', save: () => 'Guardar cambios',
+    html: id => { const a = db.citas.find(x => x.id === id), c = cliente(a.cliente); return `
+      <div class="summary"><strong>${esc(c.nombre)}</strong><div class="cell-sub"><a href="#cliente-${c.id}" data-closedrawer>Ver ficha del cliente</a></div></div>
+      <div class="field"><label for="e-est">Estado</label><select id="e-est" name="estado">${opts(LABEL.estadoCita, a.estado)}</select>
+        <div class="hint">Al marcarla como realizada se crea el seguimiento automáticamente.</div></div>
+      <div class="field"><label for="e-tit">Título</label><input id="e-tit" name="titulo" required value="${v(a.titulo)}"></div>
+      <div class="grid-2"><div class="field"><label for="e-fecha">Fecha</label><input id="e-fecha" name="fecha" type="date" required value="${iso(a.inicio)}"></div>
+      <div class="field"><label for="e-hora">Hora</label><input id="e-hora" name="hora" type="time" required value="${fTime(a.inicio)}"></div></div>
+      <div class="grid-2"><div class="field"><label for="e-dur">Duración</label><select id="e-dur" name="dur">${[30, 45, 60, 90, 120].map(m => `<option value="${m}" ${(a.fin ? (a.fin - a.inicio) / 60000 : 60) === m ? 'selected' : ''}>${m} min</option>`).join('')}</select></div>
+      <div class="field"><label for="e-mod">Modalidad</label><select id="e-mod" name="modalidad">${opts(LABEL.modalidad, a.modalidad)}</select></div></div>
+      <div class="field"><label for="e-lug">Link o dirección</label><input id="e-lug" name="lugar" value="${v(a.lugar)}"></div>
+      <div class="field"><label for="e-not">Notas</label><textarea id="e-not" name="notas">${v(a.notas)}</textarea></div>`; },
+    submit: (fd, id) => {
+      const a = db.citas.find(x => x.id === id), prev = a.estado, inicio = new Date(`${fd.get('fecha')}T${fd.get('hora')}`);
+      Object.assign(a, { titulo: fd.get('titulo'), inicio, fin: new Date(inicio.getTime() + fd.get('dur') * 60000), modalidad: fd.get('modalidad'), lugar: fd.get('lugar'), notas: fd.get('notas'), estado: fd.get('estado') });
+      if (a.estado === 'realizada' && prev !== 'realizada') { marcarRealizada(a); toast('Cita realizada · seguimiento creado'); } else toast('Cita actualizada');
+      render();
+    },
+  },
+
+  /* ---- Diagnóstico (nuevo) ---- */
+  diagnostico: {
+    title: () => 'Nuevo diagnóstico', save: () => 'Crear diagnóstico',
+    html: () => `
+      <div class="field"><label for="g-cli">Cliente</label><select id="g-cli" name="cliente"><option value="__new">+ Cliente nuevo (prospecto)</option>${clientOptions()}</select></div>
+      <div id="newCli"><div class="field"><label for="g-nom">Nombre de la empresa</label><input id="g-nom" name="nombre" required></div>
+        <div class="field"><label for="g-tel">Teléfono o WhatsApp</label><input id="g-tel" name="telefono" type="tel" placeholder="+51"></div></div>
+      <div class="field"><label for="g-url">Web a analizar</label><input id="g-url" name="url" required placeholder="ejemplo.com"></div>
+      <div class="field"><label for="g-fecha">Fecha de solicitud</label><input id="g-fecha" name="fecha" type="date" value="${iso(HOY)}"></div>`,
+    init: () => { const sel = $('#g-cli'), box = $('#newCli'), nom = $('#g-nom'); const sync = () => { const nw = sel.value === '__new'; box.hidden = !nw; nom.required = nw; }; sel.onchange = sync; sync(); },
+    submit: fd => {
+      let cid = fd.get('cliente');
+      if (cid === '__new') { cid = 'c' + Date.now(); db.clientes.unshift({ id: cid, nombre: fd.get('nombre'), ruc: '', telefono: fd.get('telefono'), email: '', estado: 'prospecto', origen: 'diagnostico', color: '#00707c', reps: [], det: { rubro: '', descripcion: '', web: fd.get('url'), redes: {}, colores: [], drive: '' } }); }
+      db.diagnosticos.unshift({ id: 'g' + Date.now(), cliente: cid, url: fd.get('url'), solicitado: new Date(fd.get('fecha') + 'T00:00'), entrega: null, estado: 'solicitado', puntaje: null, mockup: '', informe: '', proyecto: null, hallazgos: [] });
+      toast('Diagnóstico creado'); render();
+    },
+  },
+
+  /* ---- Diagnóstico (detalle / editar) ---- */
+  diagnosticoDetalle: {
+    title: () => 'Diagnóstico', save: () => 'Guardar cambios',
+    html: id => { const g = db.diagnosticos.find(x => x.id === id), c = cliente(g.cliente); return `
+      <div class="summary"><strong>${esc(c.nombre)}</strong><div class="cell-sub">${esc(g.url)} · solicitado ${fDateY(g.solicitado)} · <a href="#cliente-${c.id}" data-closedrawer>Ver ficha</a></div></div>
+      <div class="grid-2"><div class="field"><label for="d-est">Estado</label><select id="d-est" name="estado">${opts(LABEL.diag, g.estado)}</select></div>
+        <div class="field"><label for="d-sc">Puntaje (0 a 100)</label><input id="d-sc" name="puntaje" type="number" min="0" max="100" value="${g.puntaje ?? ''}"></div></div>
+      <div class="field"><label for="d-ent">Fecha de entrega</label><input id="d-ent" name="entrega" type="date" value="${g.entrega ? iso(g.entrega) : ''}"></div>
+      <fieldset><legend>Puntos de mejora (${g.hallazgos.length})</legend>
+        ${g.hallazgos.length ? g.hallazgos.map(h => `<div class="finding"><span class="area">${esc(h.area)}</span>${badge('prioridad', h.prioridad)}<span>${esc(h.texto)}</span></div>`).join('') : '<p class="muted" style="margin:0 0 10px">Aún no hay hallazgos registrados.</p>'}
+        <div id="hall" style="margin-top:12px"></div><button type="button" class="btn small" id="addH">${icon('plus', 14)}Agregar hallazgo</button></fieldset>
+      <div class="field"><label for="d-mock">Propuesta visual (link a Figma, imagen o carpeta)</label><input id="d-mock" name="mockup" type="url" placeholder="https://…" value="${v(g.mockup)}"></div>
+      <div class="field"><label for="d-inf">Informe (PDF)</label><input id="d-inf" name="informe" type="file" accept="application/pdf">${g.informe ? `<div class="hint">Actual: ${esc(g.informe)}</div>` : '<div class="hint">Se guarda en Supabase Storage, bucket “diagnosticos”.</div>'}</div>
+      ${g.proyecto ? `<p><a href="#cliente-${c.id}" data-closedrawer data-goproyectos>Ver el proyecto generado</a></p>` : `<button type="button" class="btn cta" id="toProyecto">Convertir en proyecto</button>`}`; },
+    init: id => {
+      const g = db.diagnosticos.find(x => x.id === id);
+      $('#addH').onclick = () => { const row = document.createElement('div'); row.className = 'hallazgo'; row.innerHTML = `<select name="h_area" aria-label="Área">${opts(LABEL.area)}</select><select name="h_prio" aria-label="Prioridad">${opts({ alta: 'Alta', media: 'Media', baja: 'Baja' }, 'media')}</select><input name="h_texto" placeholder="Qué encontraste" aria-label="Hallazgo">`; $('#hall').append(row); row.querySelector('input').focus(); };
+      $('#toProyecto')?.addEventListener('click', () => { closeDrawer(); setTimeout(() => openDrawer('proyecto', { cliente: g.cliente, diag: g.id }), 320); });
+    },
+    submit: (fd, id) => {
+      const g = db.diagnosticos.find(x => x.id === id), prev = g.estado, areas = fd.getAll('h_area'), prios = fd.getAll('h_prio'), txts = fd.getAll('h_texto'), f = fd.get('informe');
+      areas.forEach((ar, i) => txts[i]?.trim() && g.hallazgos.push({ area: ar, prioridad: prios[i], texto: txts[i].trim() }));
+      Object.assign(g, { estado: fd.get('estado'), puntaje: fd.get('puntaje') === '' ? null : +fd.get('puntaje'), entrega: fd.get('entrega') ? new Date(fd.get('entrega') + 'T00:00') : null, mockup: fd.get('mockup') });
+      if (f && f.name) g.informe = f.name;
+      if (g.estado === 'entregado' && prev !== 'entregado' && !g.entrega) g.entrega = new Date(HOY);
+      toast('Diagnóstico actualizado'); render();
+    },
+  },
+
+  /* ---- Proyecto + plan de pago ---- */
+  proyecto: {
+    title: () => 'Nuevo proyecto', save: () => 'Crear proyecto',
+    html: a => { const o = normArg(a), c = cliente(o.cliente), g = o.diag ? db.diagnosticos.find(x => x.id === o.diag) : null; return `
+      <div class="summary"><strong>${esc(c.nombre)}</strong>${g ? `<div class="cell-sub">Desde el diagnóstico de ${esc(g.url)}</div>` : ''}</div>
+      <fieldset><legend>Proyecto</legend>
+        <div class="field"><label for="p-srv">Servicio</label><select id="p-srv" name="servicio">${db.servicios.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('')}</select></div>
+        <div class="field"><label for="p-tit">Título</label><input id="p-tit" name="titulo" required value="${g ? 'Rediseño de ' + v(g.url) : ''}" placeholder="Ej. Tienda online con pagos"></div>
+        <div class="grid-2"><div class="field"><label for="p-est">Estado</label><select id="p-est" name="estado">${opts({ propuesta: 'Propuesta', aprobado: 'Aprobado', en_curso: 'En curso' }, 'propuesta')}</select></div>
+        <div class="field"><label for="p-ent">Entrega estimada</label><input id="p-ent" name="entrega" type="date"></div></div>
+      </fieldset>
+      <fieldset><legend>Plan de pago</legend>
+        <div class="grid-2"><div class="field"><label for="p-mod">Modalidad</label><select id="p-mod" name="modalidad">${opts(LABEL.pagoModo, 'adelanto_saldo')}</select></div>
+        <div class="field"><label for="p-monto" id="p-monto-l">Monto total (S/)</label><input id="p-monto" name="monto" type="number" min="0" step="0.01" required></div></div>
+        <div class="grid-2"><div class="field" id="p-n-w"><label for="p-n" id="p-n-l">Número de cuotas</label><input id="p-n" name="n" type="number" min="2" max="24" value="3"></div>
+        <div class="field"><label for="p-f">Primer vencimiento</label><input id="p-f" name="primera" type="date" required value="${iso(HOY)}"></div></div>
+        <div class="hint" id="p-prev"></div>
+      </fieldset>`; },
+    init: () => {
+      const f = () => {
+        const m = $('#p-mod').value, monto = +$('#p-monto').value || 0, n = +$('#p-n').value || 1;
+        $('#p-n-w').hidden = !['cuotas', 'recurrente'].includes(m);
+        $('#p-n-l').textContent = m === 'recurrente' ? 'Número de meses' : 'Número de cuotas';
+        $('#p-monto-l').textContent = m === 'recurrente' ? 'Monto por mes (S/)' : 'Monto total (S/)';
+        const pf = $('#p-f').value ? new Date($('#p-f').value + 'T00:00') : HOY;
+        $('#p-prev').textContent = monto ? 'Se crearán: ' + genCuotas(m, monto, n, pf).map(q => `${q.concepto} ${money(q.monto)} (${fDate(q.vence)})`).join(' · ') : '';
+      };
+      ['p-mod', 'p-monto', 'p-n', 'p-f'].forEach(i => $('#' + i).addEventListener('input', f)); f();
+    },
+    submit: (fd, a) => {
+      const o = normArg(a), m = fd.get('modalidad'), monto = +fd.get('monto'), n = +fd.get('n') || 1, id = 'p' + Date.now();
+      const cuotas = genCuotas(m, monto, n, new Date(fd.get('primera') + 'T00:00'));
+      db.proyectos.push({ id, cliente: o.cliente, servicio: fd.get('servicio'), titulo: fd.get('titulo'), estado: fd.get('estado'), monto: cuotas.reduce((t, q) => t + q.monto, 0), modalidad: m, entrega: fd.get('entrega') ? new Date(fd.get('entrega') + 'T00:00') : null, cuotas });
+      if (['aprobado', 'en_curso'].includes(fd.get('estado'))) cliente(o.cliente).estado = 'activo';
+      if (o.diag) { const g = db.diagnosticos.find(x => x.id === o.diag); g.estado = 'convertido'; g.proyecto = id; }
+      state.tab = 'proyectos'; toast(`Proyecto creado con ${cuotas.length} cuota${cuotas.length === 1 ? '' : 's'}`);
+      if (location.hash !== '#cliente-' + o.cliente) location.hash = 'cliente-' + o.cliente; else render();
+    },
+  },
+
+  /* ---- Registrar pago de una cuota ---- */
+  pago: {
+    title: () => 'Registrar pago', save: () => 'Registrar pago',
+    html: a => { const [pid, n] = a.split('|'), p = proyecto(pid), q = p.cuotas.find(x => x.n == n); return `
+      <div class="summary"><strong>${esc(cliente(p.cliente).nombre)}</strong><div class="cell-sub">${esc(p.titulo)} · ${esc(q.concepto)}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.03em;margin-top:6px">${money(q.monto)}</div></div>
+      <div class="grid-2"><div class="field"><label for="y-fecha">Fecha de pago</label><input id="y-fecha" name="fecha" type="date" required value="${iso(HOY)}"></div>
+      <div class="field"><label for="y-met">Método</label><select id="y-met" name="metodo">${opts(LABEL.metodo, 'Transferencia')}</select></div></div>
+      <div class="field"><label for="y-op">Número de operación</label><input id="y-op" name="operacion" class="mono"></div>
+      <div class="field"><label for="y-comp">Comprobante</label><input id="y-comp" name="comprobante" type="file" accept="image/*,application/pdf"><div class="hint">Foto o PDF. Se guarda en Supabase Storage, bucket “comprobantes”.</div></div>`; },
+    submit: (fd, a) => {
+      const [pid, n] = a.split('|'), q = proyecto(pid).cuotas.find(x => x.n == n), f = fd.get('comprobante');
+      Object.assign(q, { pagado: new Date(fd.get('fecha') + 'T00:00'), metodo: fd.get('metodo'), operacion: fd.get('operacion'), comprobante: f && f.name ? f.name : '' });
+      toast(`Pago de ${money(q.monto)} registrado`); render();
+    },
+  },
+
+  /* ---- Contrato ---- */
+  contrato: {
+    title: () => 'Nuevo contrato', save: () => 'Guardar contrato',
+    html: a => { const ps = db.proyectos.filter(p => p.cliente === a); return `
+      <div class="field"><label for="k-p">Proyecto</label><select id="k-p" name="proyecto">${ps.map(p => `<option value="${p.id}">${esc(p.titulo)}</option>`).join('')}</select></div>
+      <div class="grid-2"><div class="field"><label for="k-t">Tipo</label><select id="k-t" name="tipo">${opts({ Servicio: 'Servicio', Mantenimiento: 'Mantenimiento', Confidencialidad: 'Confidencialidad', Adenda: 'Adenda' }, 'Servicio')}</select></div>
+      <div class="field"><label for="k-e">Estado</label><select id="k-e" name="estado">${opts({ borrador: 'Borrador', enviado: 'Enviado', firmado: 'Firmado' }, 'firmado')}</select></div></div>
+      <div class="field"><label for="k-f">Fecha de firma</label><input id="k-f" name="firma" type="date"></div>
+      <div class="field"><label for="k-a">Contrato firmado (PDF)</label><input id="k-a" name="archivo" type="file" accept="application/pdf,image/*"><div class="hint">Se guarda en Supabase Storage, bucket “contratos”.</div></div>`; },
+    submit: fd => {
+      const f = fd.get('archivo');
+      db.contratos.push({ id: 'k' + Date.now(), proyecto: fd.get('proyecto'), tipo: fd.get('tipo'), firma: fd.get('firma') ? new Date(fd.get('firma') + 'T00:00') : null, estado: fd.get('estado'), archivo: f && f.name ? f.name : '' });
+      toast('Contrato guardado'); render();
+    },
+  },
+};
+
+/* ---------- Panel lateral ---------- */
+let lastFocus = null, current = null;
+function openDrawer(kind, arg) {
+  current = { f: forms[kind], arg }; lastFocus = document.activeElement;
+  const f = current.f;
+  $('#drawerTitle').textContent = f.title(arg); $('#drawerSave').textContent = f.save(arg);
+  $('#drawerBody').innerHTML = f.html(arg); f.init?.(arg);
+  $('#drawerBody').querySelectorAll('[data-closedrawer]').forEach(a => a.addEventListener('click', closeDrawer));
+  $('#drawer').classList.add('open'); $('#scrim').classList.add('open');
+  setTimeout(() => $('#drawerBody').querySelector('input:not([type=hidden]),select,textarea')?.focus(), 60);
+}
+function closeDrawer() { $('#drawer').classList.remove('open'); $('#scrim').classList.remove('open'); lastFocus?.focus?.(); }
+$('#drawerBody').addEventListener('submit', e => { e.preventDefault(); const { f, arg } = current; closeDrawer(); f.submit(new FormData(e.target), arg); });
+['drawerClose', 'drawerCancel', 'scrim'].forEach(id => $('#' + id).onclick = closeDrawer);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#drawer').classList.contains('open')) closeDrawer(); });
+
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+
+/* =====================================================================
+   ROUTER Y EVENTOS
+   Rutas: #panel · #clientes · #cliente-ID · #agenda · #diagnosticos · #pagos
+   ===================================================================== */
+function render() {
+  if (!auth.user) return;
+  const h = location.hash.slice(1) || 'panel';
+  let html, nav = h;
+  if (h.startsWith('cliente-')) {
+    state.clienteId = h.slice(8); nav = 'clientes';
+    if (state.lastCliente !== state.clienteId) { state.tab = 'resumen'; state.lastCliente = state.clienteId; }
+    html = views.cliente(state.clienteId);
+  } else { state.clienteId = null; state.lastCliente = null; html = (views[h] || views.panel)(); if (!views[h]) nav = 'panel'; }
+  $('#view').innerHTML = html;
+  document.querySelectorAll('[data-nav]').forEach(a => a.setAttribute('aria-current', a.dataset.nav === nav ? 'page' : 'false'));
+  if (nav === 'clientes' && !h.startsWith('cliente-')) { renderClientesTabla(); $('#q').oninput = e => { state.cq = e.target.value; renderClientesTabla(); }; }
+  if (nav === 'diagnosticos') renderDiagTabla();
+  if (nav === 'pagos') { renderPagosTabla(); $('#pq').oninput = e => { state.pq = e.target.value; renderPagosTabla(); }; }
+  const hoyN = db.citas.filter(a => sameDay(a.inicio, HOY) && ['agendada', 'confirmada'].includes(a.estado)).length;
+  $('#nav-agenda').textContent = hoyN || '';
+  $('#nav-pagos').textContent = todasCuotas().filter(q => !q.pagado && q.vence < HOY).length || '';
+}
+window.addEventListener('hashchange', () => { render(); window.scrollTo?.(0, 0); });
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act],[data-tab],[data-go],[data-realizada],[data-hecha],[data-cita],[data-diag],[data-chip],[data-agenda],[data-week]');
+  if (!t) return;
+  if (e.target.closest('a')) return;
+  const D = t.dataset;
+  if (D.act) openDrawer(D.act, D.arg);
+  else if (D.tab) { state.tab = D.tab; render(); }
+  else if (D.go) location.hash = D.go;
+  else if (D.realizada) { marcarRealizada(db.citas.find(x => x.id === D.realizada)); toast('Cita realizada · seguimiento creado'); render(); }
+  else if (D.hecha) { db.seguimientos.find(x => x.id === D.hecha).prox.hecha = true; toast('Acción marcada como hecha'); render(); }
+  else if (D.cita) openDrawer('citaEditar', D.cita);
+  else if (D.diag) openDrawer('diagnosticoDetalle', D.diag);
+  else if (D.chip) { const [k, val] = D.chip.split(':'); state[{ c: 'cFilter', d: 'dFilter', p: 'pFilter' }[k]] = val; render(); }
+  else if (D.agenda) { state.agendaMode = D.agenda; render(); }
+  else if (D.week !== undefined) { state.weekStart = D.week === '0' ? weekStartOf(HOY) : addDays(state.weekStart, 7 * +D.week); render(); }
+});
+
+/* ---------- Inicio ---------- */
+restoreSession();
+if (auth.user) enterApp(); else showLogin();
+</script>
+</body>
+</html>
