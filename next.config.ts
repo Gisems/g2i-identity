@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  deprecated: { looseRouteMatching: true },
   /* config options here */
   turbopack: {
     rules: {
