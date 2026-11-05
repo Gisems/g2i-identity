@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LayoutDashboard, LogOut, ScanSearch, Users, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarDays, LayoutDashboard, LogOut, ScanSearch, UserCog, Users, Wallet, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BrandLogo from "@/components/BrandLogo";
 import UserAvatar from "@/components/UserAvatar";
@@ -41,7 +41,9 @@ const menu: { label: string; items: Item[] }[] = [
   },
 ];
 
-export default function AppSidebar({ name, role }: { name: string; role: string }) {
+const adminGroup = { label: "Administración", items: [{ label: "Colaboradores", href: "/colaboradores", icon: UserCog }] };
+
+export default function AppSidebar({ name, role, canManageTeam = false }: { name: string; role: string; canManageTeam?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const { setOpenMobile } = useSidebar();
@@ -61,7 +63,7 @@ export default function AppSidebar({ name, role }: { name: string; role: string 
       </SidebarHeader>
 
       <SidebarContent>
-        {menu.map((group) => (
+        {(canManageTeam ? [...menu, adminGroup] : menu).map((group) => (
           <SidebarGroup key={group.label}>
             <SidebarGroupLabel className="text-[11px] font-semibold tracking-wide text-sidebar-foreground/50 uppercase">
               {group.label}

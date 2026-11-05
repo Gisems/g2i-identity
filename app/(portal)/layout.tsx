@@ -3,6 +3,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { createClient } from "@/lib/supabase/server";
+import { teamManagerId } from "@/lib/team";
 import "../portal.css";
 
 export default async function PortalLayout({ children, drawer }: { children: React.ReactNode; drawer: React.ReactNode }) {
@@ -21,9 +22,11 @@ export default async function PortalLayout({ children, drawer }: { children: Rea
     redirect("/login?error=sin-acceso");
   }
 
+  const canManageTeam = !!(await teamManagerId());
+
   return (
     <SidebarProvider>
-      <AppSidebar name={perfil.name} role={perfil.role} />
+      <AppSidebar name={perfil.name} role={perfil.role} canManageTeam={canManageTeam} />
       <SidebarInset className="pv-shell">
         <header className="flex items-center gap-3 border-b bg-background px-4 py-2 md:px-7">
           <SidebarTrigger />
