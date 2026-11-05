@@ -8,7 +8,7 @@ import AppointmentForm from "../AppointmentForm";
 export default async function NuevaCitaPage({ searchParams }: PageProps<"/agenda/nueva">) {
   const sp = await searchParams;
   const supabase = await createClient();
-  const { data: clients } = await supabase.from("clients").select("id, name").order("name");
+  const { data: clients } = await supabase.from("clients").select("id, name").neq("status", "inactivo").order("name");
 
   return (
     <>

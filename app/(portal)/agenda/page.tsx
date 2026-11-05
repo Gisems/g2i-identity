@@ -47,7 +47,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
   const supabase = await createClient();
   const select = "id, title, start_at, end_at, modality, location_or_link, status, clients!inner(id, name)";
 
-  let query = supabase.from("appointments").select(select).order("start_at");
+  let query = supabase.from("appointments").select(select).neq("clients.status", "inactivo").order("start_at");
   if (mode === "semana") {
     query = query
       .gte("start_at", new Date(`${weekStart}T00:00:00-05:00`).toISOString())
@@ -58,7 +58,8 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
     query,
     supabase
       .from("appointments")
-      .select("id", { count: "exact", head: true })
+      .select("id, clients!inner(status)", { count: "exact", head: true })
+      .neq("clients.status", "inactivo")
       .gte("start_at", dayStart.toISOString())
       .in("status", ["agendada", "confirmada"]),
   ]);

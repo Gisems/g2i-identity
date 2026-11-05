@@ -16,7 +16,7 @@ type Map = Record<string, { label: string; tone: Tone }>;
 export const CLIENT_STATUS: Map = {
   prospecto: { label: "Prospecto", tone: "warn" },
   activo: { label: "Activo", tone: "ok" },
-  inactivo: { label: "Inactivo", tone: "neutral" },
+  inactivo: { label: "Desactivado", tone: "neutral" },
   perdido: { label: "Perdido", tone: "bad" },
 };
 export const APPOINTMENT_STATUS: Map = {
