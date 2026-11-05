@@ -113,3 +113,17 @@ export async function updateClientAction(id: string, _prev: FormState, fd: FormD
   revalidatePath(`/clientes/${id}`);
   redirect(`/clientes/${id}`);
 }
+
+/** Elimina el cliente y, en cascada, sus proyectos, pagos, citas, diagnósticos y seguimientos. Solo admin (RLS). */
+export async function deleteClientAction(id: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("clients").delete().eq("id", id).select("id");
+  if (error) return { error: `No se pudo eliminar el cliente: ${error.message}` };
+  if (!data?.length) return { error: "No tienes permiso para eliminar clientes. Solo un administrador puede hacerlo." };
+  revalidatePath("/clientes", "layout");
+  revalidatePath("/pagos");
+  revalidatePath("/agenda");
+  revalidatePath("/diagnosticos");
+  revalidatePath("/");
+  redirect("/clientes");
+}
