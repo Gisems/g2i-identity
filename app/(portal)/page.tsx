@@ -45,19 +45,25 @@ export default async function PanelPage() {
       .gte("start_at", dayStart.toISOString())
       .lt("start_at", dayEnd.toISOString())
       .in("status", ["agendada", "confirmada"])
+      .neq("clients.status", "inactivo")
       .order("start_at"),
     supabase
       .from("follow_ups")
       .select("id, reason, next_action, next_action_date, clients!inner(id, name)")
       .eq("next_action_done", false)
       .not("next_action", "is", null)
+      .neq("clients.status", "inactivo")
       .order("next_action_date"),
     supabase
       .from("installments")
       .select("id, concept, amount, due_date, payments!inner(projects!inner(title, currency, clients!inner(id, name)))")
       .eq("status", "pendiente")
+      .neq("payments.projects.clients.status", "inactivo")
       .order("due_date"),
-    supabase.from("diagnostics_funnel").select("*"),
+    supabase
+      .from("diagnostics")
+      .select("status, converted_project_id, clients!inner(status)")
+      .neq("clients.status", "inactivo"),
   ]);
 
   const appointments = (appts.data ?? []) as unknown as Appointment[];
@@ -67,14 +73,12 @@ export default async function PanelPage() {
   const dueToday = followUps.filter((s) => s.next_action_date <= today);
   const anyLate = followUps.some((s) => s.next_action_date < today);
 
-  const f = (funnel.data ?? []).reduce(
-    (acc, r) => ({
-      requested: acc.requested + Number(r.requested),
-      delivered: acc.delivered + Number(r.delivered),
-      converted: acc.converted + Number(r.converted),
-    }),
-    { requested: 0, delivered: 0, converted: 0 },
-  );
+  const diags = funnel.data ?? [];
+  const f = {
+    requested: diags.length,
+    delivered: diags.filter((d) => d.status === "entregado" || d.status === "convertido").length,
+    converted: diags.filter((d) => d.converted_project_id !== null).length,
+  };
   const rate = f.requested ? Math.round((f.converted / f.requested) * 100) : 0;
   const funnelRows: [string, number][] = [["Solicitados", f.requested], ["Entregados", f.delivered], ["Convertidos", f.converted]];
 

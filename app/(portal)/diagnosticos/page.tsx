@@ -26,6 +26,7 @@ export default async function DiagnosticosPage({ searchParams }: PageProps<"/dia
     supabase
       .from("diagnostics")
       .select("id, analyzed_url, requested_date, status, overall_score, improvement_points, converted_project_id, clients!inner(id, name)")
+      .neq("clients.status", "inactivo")
       .order("requested_date", { ascending: false }),
     supabase.from("follow_ups").select("diagnostic_id").not("diagnostic_id", "is", null),
   ]);

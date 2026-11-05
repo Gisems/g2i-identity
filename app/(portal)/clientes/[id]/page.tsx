@@ -5,7 +5,7 @@ import {
   APPOINTMENT_STATUS, CLIENT_STATUS, DIAGNOSTIC_STATUS, MODALITY, PAYMENT_STATUS,
   Badge, Empty, Panel, StatusBadge, btn,
 } from "@/components/pv";
-import DeleteClientButton from "../DeleteClientButton";
+import ArchiveClientButton from "../ArchiveClientButton";
 import { createClient } from "@/lib/supabase/server";
 import { dateShort, dateTime, initials, money, timeShort, todayLima } from "@/lib/format";
 
@@ -102,7 +102,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
           <Link href={`/agenda/nueva?cliente=${id}`} className={btn()}><CalendarDays /> Agregar cita</Link>
           <Link href={`/diagnosticos/nuevo?cliente=${id}`} className={btn()}><Plus /> Agregar diagnóstico</Link>
           <Link href={`/clientes/${id}/editar`} className={btn("cta")}><Pencil /> Editar</Link>
-          <DeleteClientButton id={id} name={c.name} />
+          <ArchiveClientButton id={id} name={c.name} inactive={c.status === "inactivo"} />
         </div>
       </div>
 

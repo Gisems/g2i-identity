@@ -9,7 +9,7 @@ import DiagnosticForm from "../DiagnosticForm";
 export default async function NuevoDiagnosticoPage({ searchParams }: PageProps<"/diagnosticos/nuevo">) {
   const sp = await searchParams;
   const supabase = await createClient();
-  const { data: clients } = await supabase.from("clients").select("id, name").order("name");
+  const { data: clients } = await supabase.from("clients").select("id, name").neq("status", "inactivo").order("name");
 
   return (
     <>

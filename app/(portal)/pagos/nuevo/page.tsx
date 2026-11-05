@@ -20,9 +20,10 @@ export default async function AgregarPagoPage() {
     .from("installments")
     .select("id, concept, amount, due_date, payments!inner(projects!inner(id, title, currency, clients!inner(id, name)))")
     .eq("status", "pendiente")
+    .neq("payments.projects.clients.status", "inactivo")
     .order("due_date");
 
-  const back = <Link href="/pagos" className="back"><ChevronLeft /> Pagos</Link>;
+  const back = <Link href="/pagos" className="back"><ChevronLeft /> Pagos de clientes</Link>;
 
   if (error) {
     return (
@@ -48,7 +49,7 @@ export default async function AgregarPagoPage() {
   return (
     <>
       {back}
-      <Topbar title="Agregar pago" sub="Registra el pago de una cuota pendiente" />
+      <Topbar title="Agregar pago de cliente" sub="Registra el pago de una cuota pendiente de un cliente" />
       {items.length === 0 ? (
         <EmptyState
           title="No hay cuotas pendientes"

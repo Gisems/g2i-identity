@@ -26,7 +26,9 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
 
   const supabase = await createClient();
   const { data, error } = await supabase.from("client_summary").select("*").order("name");
-  const all = (data ?? []) as Row[];
+  const everyone = (data ?? []) as Row[];
+  // Los clientes desactivados quedan fuera de todo; solo aparecen en la lista aparte "Desactivados".
+  const all = filter === "inactivo" ? everyone : everyone.filter((c) => c.status !== "inactivo");
 
   // Es una base chica: se filtra en memoria para poder mostrar el conteo de cada filtro.
   const cold = (c: Row) => c.days_since_contact == null || c.days_since_contact >= 14;
@@ -35,7 +37,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
     ["todos", "Todos", all.length],
     ["activo", "Activos", count((c) => c.status === "activo")],
     ["prospecto", "Prospectos", count((c) => c.status === "prospecto")],
-    ["inactivo", "Inactivos", count((c) => c.status === "inactivo")],
+    ["inactivo", "Desactivados", everyone.filter((c) => c.status === "inactivo").length],
     ["saldo", "Con saldo pendiente", count((c) => Number(c.pending_balance) > 0)],
     ["sin-contacto", "Sin contacto hace 14+ días", count(cold)],
   ];

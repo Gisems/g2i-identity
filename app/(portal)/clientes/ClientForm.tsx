@@ -81,7 +81,7 @@ export default function ClientForm({
                 <select id="status" name="status" defaultValue={initial?.status ?? "prospecto"}>
                   <option value="prospecto">Prospecto</option>
                   <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
+                  <option value="inactivo">Desactivado</option>
                   <option value="perdido">Perdido</option>
                 </select>
               </Field>
