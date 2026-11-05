@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LayoutDashboard, LogOut, ScanSearch, UserCog, Users, Wallet, type LucideIcon } from "lucide-react";
+import { CalendarDays, LayoutDashboard, LogOut, PiggyBank, ScanSearch, UserCog, Users, Wallet, type LucideIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import BrandLogo from "@/components/BrandLogo";
 import UserAvatar from "@/components/UserAvatar";
@@ -36,7 +36,8 @@ const menu: { label: string; items: Item[] }[] = [
     label: "Gestión",
     items: [
       { label: "Diagnósticos", href: "/diagnosticos", icon: ScanSearch },
-      { label: "Pagos", href: "/pagos", icon: Wallet },
+      { label: "Pagos de clientes", href: "/pagos", icon: Wallet },
+      { label: "Finanzas", href: "/finanzas", icon: PiggyBank },
     ],
   },
 ];

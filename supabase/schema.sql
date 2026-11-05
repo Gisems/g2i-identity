@@ -516,6 +516,110 @@ group by 1
 order by 1 desc;
 
 -- ---------------------------------------------------------------------
+-- 13a. Finance: company accounts, deposits and payroll
+--      (see supabase/migrations/2026-11-05_account_payroll.sql)
+-- ---------------------------------------------------------------------
+-- 1. Cuentas de la empresa --------------------------------------------------
+create table if not exists public.accounts (
+  id                        uuid primary key default gen_random_uuid(),
+  name                      text not null unique,
+  currency                  text not null default 'PEN' check (currency in ('PEN', 'USD')),
+  opening_balance           numeric(12,2) not null default 0,     -- saldo con el que empieza a contarse
+  opening_date              date not null default current_date,   -- desde cuándo se cuentan los movimientos
+  receives_client_payments  boolean not null default true,        -- suma las cuotas cobradas (misma moneda)
+  active                    boolean not null default true,
+  created_at                timestamptz not null default now(),
+  updated_at                timestamptz not null default now()
+);
+
+-- 2. Depósitos a la cuenta ---------------------------------------------------
+create table if not exists public.account_deposits (
+  id            uuid primary key default gen_random_uuid(),
+  account_id    uuid not null references public.accounts(id) on delete cascade,
+  amount        numeric(12,2) not null check (amount > 0),
+  deposit_date  date not null default current_date,
+  concept       text,
+  created_by    uuid references public.users(id) on delete set null default auth.uid(),
+  created_at    timestamptz not null default now()
+);
+create index if not exists idx_deposits_account on public.account_deposits(account_id, deposit_date);
+
+-- 3. Pagos a empleados --------------------------------------------------------
+create table if not exists public.payroll_payments (
+  id           uuid primary key default gen_random_uuid(),
+  employee_id  uuid not null references public.users(id) on delete restrict,
+  kind         text not null default 'sueldo' check (kind in ('sueldo', 'bono', 'adelanto', 'otro')),
+  period       date not null,                                   -- primer día del mes al que corresponde
+  amount       numeric(12,2) not null check (amount > 0),
+  currency     text not null default 'PEN' check (currency in ('PEN', 'USD')),
+  paid_date    date not null default current_date,
+  account_id   uuid references public.accounts(id) on delete set null,
+  notes        text,
+  created_by   uuid references public.users(id) on delete set null default auth.uid(),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+create index if not exists idx_payroll_period   on public.payroll_payments(period);
+create index if not exists idx_payroll_employee on public.payroll_payments(employee_id);
+create index if not exists idx_payroll_account  on public.payroll_payments(account_id, paid_date);
+
+-- ---------------------------------------------------------------------
+-- 13b. Finance: expenses (see supabase/migrations/2026-11-05_expenses.sql)
+-- ---------------------------------------------------------------------
+create table if not exists public.expenses (
+  id            uuid primary key default gen_random_uuid(),
+  concept       text not null,
+  category      text not null default 'otro'
+                check (category in ('hosting', 'herramientas', 'publicidad', 'sueldos', 'impuestos', 'oficina', 'servicios', 'otro')),
+  amount        numeric(12,2) not null check (amount > 0),
+  currency      text not null default 'PEN' check (currency in ('PEN', 'USD')),
+  expense_date  date not null default current_date,
+  platform      text,                                                      -- GoDaddy, Namecheap, Google Ads...
+  paid_by       uuid references public.users(id) on delete set null,       -- who made the expense
+  expires_on    date,                                                      -- when it expires / renews
+  account_id    uuid references public.accounts(id) on delete set null,    -- account it was paid from
+  notes         text,
+  created_by    uuid references public.users(id) on delete set null default auth.uid(),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+create index if not exists idx_expenses_date on public.expenses(expense_date);
+
+drop trigger if exists trg_expenses_updated on public.expenses;
+create trigger trg_expenses_updated before update on public.expenses
+  for each row execute function public.set_updated_at();
+
+alter table public.expenses enable row level security;
+drop policy if exists team_select on public.expenses;
+drop policy if exists team_insert on public.expenses;
+drop policy if exists team_update on public.expenses;
+drop policy if exists team_delete on public.expenses;
+create policy team_select on public.expenses for select to authenticated using (public.is_team_member());
+create policy team_insert on public.expenses for insert to authenticated with check (public.is_team_member());
+create policy team_update on public.expenses for update to authenticated using (public.is_team_member()) with check (public.is_team_member());
+-- Los gastos mal cargados los puede borrar cualquier miembro del equipo.
+create policy team_delete on public.expenses for delete to authenticated using (public.is_team_member());
+
+drop trigger if exists trg_accounts_updated on public.accounts;
+create trigger trg_accounts_updated before update on public.accounts
+  for each row execute function public.set_updated_at();
+drop trigger if exists trg_payroll_updated on public.payroll_payments;
+create trigger trg_payroll_updated before update on public.payroll_payments
+  for each row execute function public.set_updated_at();
+
+-- Accounts / deposits / payroll: admins only
+do $$
+declare t text;
+begin
+  foreach t in array array['accounts', 'account_deposits', 'payroll_payments']
+  loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists admin_all on public.%I', t);
+    execute format('create policy admin_all on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())', t);
+  end loop;
+end $$;
+
+-- ---------------------------------------------------------------------
 -- 14. Security (Row Level Security)
 --     Only authenticated, active team members can read and write.
 --     Only admins can delete.
