@@ -56,6 +56,9 @@ export async function setCollaboratorActiveAction(id: string, active: boolean) {
   const managerId = await teamManagerId();
   if (!managerId || managerId === id) return; // nadie se desactiva a sí mismo
   const supabase = await createClient();
+  // Los administradores no se desactivan desde el panel (así nunca nos quedamos sin admins); si hace falta, se hace en Supabase.
+  const { data: target } = await supabase.from("users").select("role").eq("id", id).maybeSingle();
+  if (!target || target.role === "admin") return;
   await supabase.from("users").update({ active }).eq("id", id);
   revalidatePath("/colaboradores");
 }
