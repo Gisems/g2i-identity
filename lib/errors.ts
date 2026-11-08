@@ -11,11 +11,20 @@ const REASONS: Record<string, string> = {
   "42501": "no tienes permiso para hacerlo.",
 };
 
+// Quita de los logs los valores del usuario que Postgres/Supabase suelen incluir en el mensaje
+// (la clave duplicada, el texto con formato inválido, correos). Se conservan código y restricción.
+function redact(message: string): string {
+  return message
+    .replace(/\(([^)]*)\)=\([^)]*\)/g, "($1)=(***)")
+    .replace(/(invalid input syntax for [^:]+): ".*"/g, '$1: "***"')
+    .replace(/[\w.+-]+@[\w-]+\.[\w.-]+/g, "***@***");
+}
+
 /**
  * Mensaje seguro para mostrar al usuario. El detalle técnico del error (Postgres/Supabase) solo se
- * registra en el servidor; al navegador llega únicamente un motivo genérico según el código.
+ * registra en el servidor, sin los valores del usuario; al navegador llega únicamente un motivo genérico según el código.
  */
 export function fail(prefix: string, error: DbError): string {
-  console.error(`[${prefix}]`, error.code ?? "", error.message);
+  console.error(`[${prefix}]`, error.code ?? "", redact(error.message));
   return `${prefix}: ${REASONS[error.code ?? ""] ?? "inténtalo de nuevo."}`;
 }
