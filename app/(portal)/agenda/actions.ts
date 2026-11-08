@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { limaLocalToIso } from "@/lib/format";
 import { fail } from "@/lib/errors";
 
@@ -48,6 +49,7 @@ function parse(fd: FormData) {
 }
 
 export async function createAppointmentAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
@@ -63,6 +65,7 @@ export async function createAppointmentAction(_prev: FormState, fd: FormData): P
 }
 
 export async function updateAppointmentAction(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
@@ -78,6 +81,7 @@ export async function updateAppointmentAction(id: string, _prev: FormState, fd: 
 
 /** Marca la cita como realizada; la base crea sola su seguimiento. */
 export async function markDoneAction(id: string) {
+  if (!(await teamMemberId())) return;
   const supabase = await createClient();
   await supabase.from("appointments").update({ status: "realizada" }).eq("id", id);
   revalidatePath("/agenda");

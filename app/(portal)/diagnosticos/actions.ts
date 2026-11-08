@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { isHttpUrl } from "@/lib/url";
 import { fail } from "@/lib/errors";
 
@@ -51,6 +52,7 @@ function parse(fd: FormData) {
 }
 
 export async function createDiagnosticAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
@@ -83,6 +85,7 @@ export async function createDiagnosticAction(_prev: FormState, fd: FormData): Pr
 }
 
 export async function updateDiagnosticAction(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();

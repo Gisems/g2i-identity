@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { genInstallments, type Modality } from "@/lib/installments";
 import { fail } from "@/lib/errors";
 
@@ -12,6 +13,7 @@ const MODALITIES: Modality[] = ["contado", "adelanto_saldo", "cuotas", "recurren
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 export async function createProjectAction(clientId: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const title = text(fd, "title");
   const serviceId = text(fd, "service_id");
   const currency = text(fd, "currency") === "USD" ? "USD" : "PEN";

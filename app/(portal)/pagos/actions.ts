@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { fail } from "@/lib/errors";
 
 export type PaymentState = { error?: string; ok?: boolean };
@@ -14,6 +15,7 @@ const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
  * (así también sirve para deshacer un pago puesto por error).
  */
 export async function saveInstallmentAction(id: string, _prev: PaymentState, fd: FormData): Promise<PaymentState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const amount = Number(text(fd, "amount"));
   const dueDate = text(fd, "due_date");
   const paidDate = text(fd, "paid_date");
@@ -45,6 +47,7 @@ export async function saveInstallmentAction(id: string, _prev: PaymentState, fd:
 
 /** "Agregar pago": registra el pago de una cuota pendiente elegida en el formulario. */
 export async function addPaymentAction(_prev: PaymentState, fd: FormData): Promise<PaymentState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const id = text(fd, "installment_id");
   const paidDate = text(fd, "paid_date");
   const method = text(fd, "payment_method");

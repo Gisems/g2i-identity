@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { isHttpUrl } from "@/lib/url";
 import { fail } from "@/lib/errors";
 
@@ -72,6 +73,7 @@ const dupMessage = (error: { code?: string; message: string }) =>
   error.code === "23505" ? "Ya existe un cliente con ese RUC." : fail("No se pudo guardar", error);
 
 export async function createClientAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
   const { client, reps, details } = parsed;
@@ -92,6 +94,7 @@ export async function createClientAction(_prev: FormState, fd: FormData): Promis
 }
 
 export async function updateClientAction(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
   const { client, reps, details } = parsed;
@@ -122,6 +125,7 @@ export async function updateClientAction(id: string, _prev: FormState, fd: FormD
 
 /** Oculta al cliente (estado "inactivo") o lo reactiva. No borra nada: proyectos, pagos y citas se conservan. */
 export async function setClientActiveAction(id: string, active: boolean): Promise<{ error?: string }> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clients")
