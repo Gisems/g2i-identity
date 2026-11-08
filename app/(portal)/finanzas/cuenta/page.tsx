@@ -7,6 +7,7 @@ import { dateShort, money } from "@/lib/format";
 import { accountSummary, type Account } from "@/lib/account";
 import { adminId } from "@/lib/team";
 import FinanceNav from "../FinanceNav";
+import { fail } from "@/lib/errors";
 
 const KIND: Record<string, string> = { deposito: "Depósito", cobro: "Cobro de cliente", gasto: "Gasto", sueldo: "Pago a empleado" };
 
@@ -30,7 +31,7 @@ export default async function CuentaPage() {
         }
       />
       <FinanceNav current="cuenta" admin />
-      {error && <div className="form-error" role="alert">No se pudieron cargar las cuentas: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudieron cargar las cuentas", error)}</div>}
 
       {accounts.length === 0 && (
         <Panel>
@@ -53,7 +54,7 @@ export default async function CuentaPage() {
               <span className="muted" style={{ fontSize: 13 }}>desde {dateShort(a.opening_date)}</span>
               <Link href={`/finanzas/cuenta/${a.id}`} className={btn("small", "ghost")} aria-label={`Editar ${a.name}`}><Pencil size={14} /> Editar</Link>
             </div>
-            {sErr && <div className="form-error" role="alert">No se pudo calcular el saldo: {sErr.message}</div>}
+            {sErr && <div className="form-error" role="alert">{fail("No se pudo calcular el saldo", sErr)}</div>}
             <Stats
               items={[
                 [money(t.balance, a.currency), "Saldo actual", t.balance < 0],

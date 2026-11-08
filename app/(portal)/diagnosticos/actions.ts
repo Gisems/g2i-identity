@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
+import { isHttpUrl } from "@/lib/url";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -16,6 +19,9 @@ function parse(fd: FormData) {
   const score = scoreRaw === "" ? null : Number(scoreRaw);
 
   if (!url) return { error: "Indica la URL analizada." };
+  if (!isHttpUrl(url, true)) return { error: "La URL analizada debe ser http:// o https://." };
+  const mockup = text(fd, "mockup_url");
+  if (mockup && !isHttpUrl(mockup)) return { error: "El enlace del mockup debe ser http:// o https://." };
   if (!STATUSES.includes(status)) return { error: "Estado no válido." };
   if (score !== null && !(Number.isInteger(score) && score >= 0 && score <= 100)) {
     return { error: "El puntaje debe ser un número entero de 0 a 100." };
@@ -39,13 +45,14 @@ function parse(fd: FormData) {
       requested_date: text(fd, "requested_date") || undefined,
       delivered_date: text(fd, "delivered_date") || null,
       overall_score: score,
-      mockup_url: text(fd, "mockup_url") || null,
+      mockup_url: mockup || null,
       improvement_points,
     },
   };
 }
 
 export async function createDiagnosticAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
@@ -62,14 +69,14 @@ export async function createDiagnosticAction(_prev: FormState, fd: FormData): Pr
       .insert({ name: newName, status: "prospecto", source: "diagnostico" })
       .select("id")
       .single();
-    if (error) return { error: `No se pudo crear el cliente: ${error.message}` };
+    if (error) return { error: fail("No se pudo crear el cliente", error) };
     clientId = created.id;
   }
 
   const { error } = await supabase
     .from("diagnostics")
     .insert({ ...parsed.row, client_id: clientId, manager_id: user?.id ?? null });
-  if (error) return { error: `No se pudo guardar el diagnóstico: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar el diagnóstico", error) };
 
   revalidatePath("/diagnosticos");
   revalidatePath("/clientes", "layout");
@@ -78,12 +85,13 @@ export async function createDiagnosticAction(_prev: FormState, fd: FormData): Pr
 }
 
 export async function updateDiagnosticAction(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
 
   const { error } = await supabase.from("diagnostics").update(parsed.row).eq("id", id);
-  if (error) return { error: `No se pudo guardar el diagnóstico: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar el diagnóstico", error) };
 
   revalidatePath("/diagnosticos");
   revalidatePath("/clientes", "layout");

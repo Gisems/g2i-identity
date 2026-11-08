@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { genInstallments, type Modality } from "@/lib/installments";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string };
 
@@ -11,6 +13,7 @@ const MODALITIES: Modality[] = ["contado", "adelanto_saldo", "cuotas", "recurren
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 export async function createProjectAction(clientId: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const title = text(fd, "title");
   const serviceId = text(fd, "service_id");
   const currency = text(fd, "currency") === "USD" ? "USD" : "PEN";
@@ -50,7 +53,7 @@ export async function createProjectAction(clientId: string, _prev: FormState, fd
     })
     .select("id")
     .single();
-  if (error) return { error: `No se pudo crear el proyecto: ${error.message}` };
+  if (error) return { error: fail("No se pudo crear el proyecto", error) };
 
   const { data: plan, error: planErr } = await supabase
     .from("payments")
@@ -63,12 +66,12 @@ export async function createProjectAction(clientId: string, _prev: FormState, fd
     })
     .select("id")
     .single();
-  if (planErr) return { error: `El proyecto se creó, pero no su plan de pago: ${planErr.message}` };
+  if (planErr) return { error: fail("El proyecto se creó, pero no su plan de pago", planErr) };
 
   const { error: instErr } = await supabase
     .from("installments")
     .insert(installments.map((i) => ({ ...i, payment_id: plan.id })));
-  if (instErr) return { error: `El proyecto y el plan se crearon, pero no las cuotas: ${instErr.message}` };
+  if (instErr) return { error: fail("El proyecto y el plan se crearon, pero no las cuotas", instErr) };
 
   // Un proyecto aprobado o en curso vuelve activo al cliente.
   if (status === "aprobado" || status === "en_curso") {

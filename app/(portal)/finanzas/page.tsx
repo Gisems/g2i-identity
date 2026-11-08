@@ -3,8 +3,10 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Empty, Panel, Stats, Topbar, btn } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { addDays, dateShort, money, todayLima } from "@/lib/format";
+import { notFound } from "next/navigation";
 import { adminId } from "@/lib/team";
 import FinanceNav from "./FinanceNav";
+import { fail } from "@/lib/errors";
 
 type Income = {
   id: string;
@@ -52,7 +54,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
   const next = `${shiftMonth(month, 1)}-01`;
 
   const supabase = await createClient();
-  const admin = !!(await adminId());
+  if (!(await adminId())) notFound();
   const [paidRes, pendRes, expRes, renewRes, payrollRes] = await Promise.all([
     supabase
       .from("installments")
@@ -70,8 +72,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
     supabase.from("expenses").select(EXP_SELECT).gte("expense_date", start).lt("expense_date", next).order("expense_date", { ascending: false }),
     // Renovaciones: lo vencido en el último año y lo que vence en los próximos 60 días, sea cual sea el mes que se mira.
     supabase.from("expenses").select(EXP_SELECT).not("expires_on", "is", null).lte("expires_on", addDays(today, 60)).gte("expires_on", addDays(today, -365)).order("expires_on"),
-    // Los sueldos solo los puede leer un admin (RLS); para los demás vienen vacíos y no se muestran.
-    admin ? supabase.from("payroll_payments").select("amount, currency").eq("period", start) : Promise.resolve({ data: [] as unknown[], error: null as { message: string } | null }),
+    supabase.from("payroll_payments").select("amount, currency").eq("period", start),
   ]);
 
   const income = (paidRes.data ?? []) as unknown as Income[];
@@ -99,7 +100,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
         actions={<Link href="/finanzas/gastos/nuevo" className={btn("cta")}><Plus /> Agregar gasto</Link>}
       />
 
-      <FinanceNav current="resumen" admin={admin} />
+      <FinanceNav current="resumen" admin />
 
       <div className="agenda-bar">
         <Link href={href(shiftMonth(month, -1))} className={btn("small")} aria-label="Mes anterior"><ChevronLeft size={14} /></Link>
@@ -108,7 +109,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
         <span className="range" style={{ textTransform: "capitalize" }}>{monthLabel(month)}</span>
       </div>
 
-      {error && <div className="form-error" role="alert">No se pudo cargar Finanzas: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudo cargar Finanzas", error)}</div>}
 
       {currencies.map((cur) => {
         const c = collected.get(cur) ?? 0;
@@ -122,7 +123,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
               items={[
                 [money(c, cur), "Cobrado de clientes en el mes"],
                 [money(g, cur), "Gastos del mes"],
-                ...(admin ? ([[money(w, cur), "Sueldos del mes"]] as [string, string][]) : []),
+                [money(w, cur), "Sueldos del mes"],
                 [money(balance, cur), "Balance del mes", balance < 0],
                 [money(toCollect.get(cur) ?? 0, cur), "Por cobrar (total)"],
                 [money(overdue.get(cur) ?? 0, cur), "Vencido", (overdue.get(cur) ?? 0) > 0],
@@ -170,7 +171,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
                   <td><Link href={`/finanzas/gastos/${e.id}`}>{e.concept}</Link></td>
                   <td>{e.platform ?? "—"}</td>
                   <td>{e.payer?.name ?? "—"}</td>
-                  <td className="num">{money(e.amount, e.currency)}</td>
+                  <td className="num">{Number(e.amount) === 0 ? "Gratis" : money(e.amount, e.currency)}</td>
                 </tr>
               ))}
             </tbody>
@@ -193,7 +194,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
                   <td>{e.platform ?? "—"}</td>
                   <td>{e.payer?.name ?? "—"}</td>
                   <td>{e.expires_on ? dateShort(e.expires_on) : "—"}</td>
-                  <td className="num"><strong>{money(e.amount, e.currency)}</strong></td>
+                  <td className="num"><strong>{Number(e.amount) === 0 ? "Gratis" : money(e.amount, e.currency)}</strong></td>
                 </tr>
               ))}
             </tbody>

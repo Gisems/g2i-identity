@@ -37,12 +37,15 @@ const menu: { label: string; items: Item[] }[] = [
     items: [
       { label: "Diagnósticos", href: "/diagnosticos", icon: ScanSearch },
       { label: "Pagos de clientes", href: "/pagos", icon: Wallet },
-      { label: "Finanzas", href: "/finanzas", icon: PiggyBank },
     ],
   },
 ];
 
-const adminGroup = { label: "Administración", items: [{ label: "Colaboradores", href: "/colaboradores", icon: UserCog }] };
+const adminGroup = { label: "Administración", items: [
+    { label: "Finanzas", href: "/finanzas", icon: PiggyBank },
+    { label: "Colaboradores", href: "/colaboradores", icon: UserCog },
+  ],
+};
 
 export default function AppSidebar({ name, role, canManageTeam = false }: { name: string; role: string; canManageTeam?: boolean }) {
   const pathname = usePathname();

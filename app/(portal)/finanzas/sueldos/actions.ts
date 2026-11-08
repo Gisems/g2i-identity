@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { checkAccountCurrency } from "@/lib/account";
 import { adminId } from "@/lib/team";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -50,7 +51,7 @@ export async function createPayrollAction(_prev: FormState, fd: FormData): Promi
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { error } = await supabase.from("payroll_payments").insert(parsed.row);
-  if (error) return { error: `No se pudo guardar el pago: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar el pago", error) };
   revalidatePath("/finanzas", "layout");
   return { ok: true };
 }
@@ -61,7 +62,7 @@ export async function updatePayrollAction(id: string, _prev: FormState, fd: Form
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { error } = await supabase.from("payroll_payments").update(parsed.row).eq("id", id);
-  if (error) return { error: `No se pudo guardar el pago: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar el pago", error) };
   revalidatePath("/finanzas", "layout");
   return { ok: true };
 }

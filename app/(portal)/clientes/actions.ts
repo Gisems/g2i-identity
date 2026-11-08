@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
+import { isHttpUrl } from "@/lib/url";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string };
 
@@ -16,6 +19,10 @@ function parseCommon(fd: FormData) {
   const ruc = val(fd, "ruc");
   if (!name) return { error: "El nombre es obligatorio." as const };
   if (ruc && !/^\d{11}$/.test(ruc)) return { error: "El RUC debe tener 11 dígitos." as const };
+  const website = val(fd, "current_website");
+  const drive = val(fd, "drive_folder_url");
+  if (website && !isHttpUrl(website)) return { error: "La web actual debe empezar con http:// o https://." as const };
+  if (drive && !isHttpUrl(drive)) return { error: "La carpeta de Drive debe ser un enlace http:// o https://." as const };
 
   const client = {
     name,
@@ -53,19 +60,20 @@ function parseCommon(fd: FormData) {
 
   const details = {
     industry: val(fd, "industry"),
-    current_website: val(fd, "current_website"),
+    current_website: website,
     description: val(fd, "description"),
-    drive_folder_url: val(fd, "drive_folder_url"),
+    drive_folder_url: drive,
     brand_colors,
   };
 
   return { client, reps, details };
 }
 
-const dupMessage = (code?: string, message?: string) =>
-  code === "23505" ? "Ya existe un cliente con ese RUC." : `No se pudo guardar: ${message}`;
+const dupMessage = (error: { code?: string; message: string }) =>
+  error.code === "23505" ? "Ya existe un cliente con ese RUC." : fail("No se pudo guardar", error);
 
 export async function createClientAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
   const { client, reps, details } = parsed;
@@ -73,7 +81,7 @@ export async function createClientAction(_prev: FormState, fd: FormData): Promis
 
   // owner_id lo asigna la base con el usuario logueado
   const { data: created, error } = await supabase.from("clients").insert(client).select("id").single();
-  if (error) return { error: dupMessage(error.code, error.message) };
+  if (error) return { error: dupMessage(error) };
 
   const [repRes, detRes] = await Promise.all([
     reps.length
@@ -86,26 +94,27 @@ export async function createClientAction(_prev: FormState, fd: FormData): Promis
 }
 
 export async function updateClientAction(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
   const { client, reps, details } = parsed;
   const supabase = await createClient();
 
   const { error } = await supabase.from("clients").update(client).eq("id", id);
-  if (error) return { error: dupMessage(error.code, error.message) };
+  if (error) return { error: dupMessage(error) };
 
   const { error: detErr } = await supabase.from("client_details").upsert({ client_id: id, ...details });
-  if (detErr) return { error: `Se guardó el cliente, pero no los detalles de marca: ${detErr.message}` };
+  if (detErr) return { error: fail("Se guardó el cliente, pero no los detalles de marca", detErr) };
 
   // Un solo principal por cliente: se limpia antes de marcar el nuevo.
   if (reps.length) {
     const cleared = await supabase.from("representatives").update({ is_primary: false }).eq("client_id", id);
-    if (cleared.error) return { error: `No se pudieron actualizar los representantes: ${cleared.error.message}` };
+    if (cleared.error) return { error: fail("No se pudieron actualizar los representantes", cleared.error) };
     for (const { id: repId, ...r } of reps) {
       const res = repId
         ? await supabase.from("representatives").update(r).eq("id", repId).eq("client_id", id)
         : await supabase.from("representatives").insert({ ...r, client_id: id });
-      if (res.error) return { error: `No se pudo guardar el representante ${r.name}: ${res.error.message}` };
+      if (res.error) return { error: fail(`No se pudo guardar el representante ${r.name}`, res.error) };
     }
   }
 
@@ -116,13 +125,14 @@ export async function updateClientAction(id: string, _prev: FormState, fd: FormD
 
 /** Oculta al cliente (estado "inactivo") o lo reactiva. No borra nada: proyectos, pagos y citas se conservan. */
 export async function setClientActiveAction(id: string, active: boolean): Promise<{ error?: string }> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clients")
     .update({ status: active ? "activo" : "inactivo" })
     .eq("id", id)
     .select("id");
-  if (error) return { error: `No se pudo actualizar el cliente: ${error.message}` };
+  if (error) return { error: fail("No se pudo actualizar el cliente", error) };
   if (!data?.length) return { error: "No se encontró el cliente." };
   revalidatePath("/clientes", "layout");
   revalidatePath("/");

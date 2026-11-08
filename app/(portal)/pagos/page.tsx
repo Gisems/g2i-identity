@@ -4,6 +4,7 @@ import { Badge, Chips, Empty, Panel, SearchBox, Stats, Topbar, btn } from "@/com
 import { createClient } from "@/lib/supabase/server";
 import { addDays, dateShort, money, todayLima } from "@/lib/format";
 import PaymentDialog from "./PaymentDialog";
+import { fail } from "@/lib/errors";
 
 type Row = {
   id: string;
@@ -87,7 +88,7 @@ export default async function PagosPage({ searchParams }: PageProps<"/pagos">) {
         ]}
       />
 
-      {error && <div className="form-error" role="alert">No se pudieron cargar los pagos de clientes: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudieron cargar los pagos de clientes", error)}</div>}
 
       <Panel>
         <div className="filters">
