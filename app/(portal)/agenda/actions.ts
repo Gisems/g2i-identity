@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { limaLocalToIso } from "@/lib/format";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -47,13 +49,14 @@ function parse(fd: FormData) {
 }
 
 export async function createAppointmentAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { error } = await supabase.from("appointments").insert({ ...parsed.row, manager_id: user?.id ?? null });
-  if (error) return { error: `No se pudo guardar la cita: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar la cita", error) };
 
   revalidatePath("/agenda");
   revalidatePath("/clientes", "layout");
@@ -62,12 +65,13 @@ export async function createAppointmentAction(_prev: FormState, fd: FormData): P
 }
 
 export async function updateAppointmentAction(id: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parse(fd);
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
 
   const { error } = await supabase.from("appointments").update(parsed.row).eq("id", id);
-  if (error) return { error: `No se pudo guardar la cita: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar la cita", error) };
 
   revalidatePath("/agenda");
   revalidatePath("/clientes", "layout");
@@ -77,6 +81,7 @@ export async function updateAppointmentAction(id: string, _prev: FormState, fd: 
 
 /** Marca la cita como realizada; la base crea sola su seguimiento. */
 export async function markDoneAction(id: string) {
+  if (!(await teamMemberId())) return;
   const supabase = await createClient();
   await supabase.from("appointments").update({ status: "realizada" }).eq("id", id);
   revalidatePath("/agenda");

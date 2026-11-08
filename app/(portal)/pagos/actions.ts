@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { NO_ACCESS, teamMemberId } from "@/lib/team";
+import { fail } from "@/lib/errors";
 
 export type PaymentState = { error?: string; ok?: boolean };
 
@@ -13,6 +15,7 @@ const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
  * (así también sirve para deshacer un pago puesto por error).
  */
 export async function saveInstallmentAction(id: string, _prev: PaymentState, fd: FormData): Promise<PaymentState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const amount = Number(text(fd, "amount"));
   const dueDate = text(fd, "due_date");
   const paidDate = text(fd, "paid_date");
@@ -35,7 +38,7 @@ export async function saveInstallmentAction(id: string, _prev: PaymentState, fd:
       status: paidDate ? "pagada" : "pendiente",
     })
     .eq("id", id);
-  if (error) return { error: `No se pudo guardar: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar", error) };
 
   revalidatePath("/pagos");
   revalidatePath("/clientes", "layout");
@@ -44,6 +47,7 @@ export async function saveInstallmentAction(id: string, _prev: PaymentState, fd:
 
 /** "Agregar pago": registra el pago de una cuota pendiente elegida en el formulario. */
 export async function addPaymentAction(_prev: PaymentState, fd: FormData): Promise<PaymentState> {
+  if (!(await teamMemberId())) return { error: NO_ACCESS };
   const id = text(fd, "installment_id");
   const paidDate = text(fd, "paid_date");
   const method = text(fd, "payment_method");
@@ -59,7 +63,7 @@ export async function addPaymentAction(_prev: PaymentState, fd: FormData): Promi
     .update({ paid_date: paidDate, payment_method: method, operation_number: operation || null, status: "pagada" })
     .eq("id", id)
     .eq("status", "pendiente");
-  if (error) return { error: `No se pudo registrar el pago: ${error.message}` };
+  if (error) return { error: fail("No se pudo registrar el pago", error) };
 
   revalidatePath("/pagos");
   revalidatePath("/clientes", "layout");

@@ -118,7 +118,7 @@ export default function ExpenseForm({
                 </select>
               </Field>
               <Field id="amount" label="Monto *">
-                <input id="amount" name="amount" type="number" min="0.01" step="0.01" required defaultValue={initial.amount} className="mono" />
+                <input id="amount" name="amount" type="number" min="0" step="0.01" required placeholder="0 = gratis" defaultValue={initial.amount} className="mono" />
               </Field>
               <Field id="currency" label="Moneda *">
                 <select id="currency" name="currency" defaultValue={initial.currency}>

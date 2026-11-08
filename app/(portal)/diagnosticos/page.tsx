@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { Chips, DIAGNOSTIC_STATUS, Empty, Panel, Stats, StatusBadge, Topbar, btn } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { dateShort } from "@/lib/format";
+import { fail } from "@/lib/errors";
 
 type Row = {
   id: string;
@@ -68,7 +69,7 @@ export default async function DiagnosticosPage({ searchParams }: PageProps<"/dia
         ]}
       />
 
-      {error && <div className="form-error" role="alert">No se pudieron cargar los diagnósticos: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudieron cargar los diagnósticos", error)}</div>}
 
       <Panel>
         <div className="filters">

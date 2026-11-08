@@ -6,37 +6,9 @@
 --  channels, etc.) stay in Spanish because they are shown in the UI.
 -- =====================================================================
 
--- ---------------------------------------------------------------------
--- 0. CLEANUP: wipes EVERYTHING in the public schema (tables, views,
---    functions) and the policies on storage.objects, whatever
---    their names are. Does NOT touch auth.users or Supabase internals.
--- WARNING: all data in public tables is deleted permanently.
--- ---------------------------------------------------------------------
-do $$
-declare r record;
-begin
-  -- views
-  for r in select viewname from pg_views where schemaname = 'public' loop
-    execute format('drop view if exists public.%I cascade', r.viewname);
-  end loop;
-  -- tables
-  for r in select tablename from pg_tables where schemaname = 'public' loop
-    execute format('drop table if exists public.%I cascade', r.tablename);
-  end loop;
-  -- functions (skip those owned by extensions)
-  for r in
-    select p.oid::regprocedure as sig
-    from pg_proc p
-    where p.pronamespace = 'public'::regnamespace
-      and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
-  loop
-    execute format('drop function if exists %s cascade', r.sig);
-  end loop;
-  -- policies on storage files
-  for r in select policyname from pg_policies where schemaname = 'storage' and tablename = 'objects' loop
-    execute format('drop policy if exists %I on storage.objects', r.policyname);
-  end loop;
-end $$;
+-- Este script NO borra datos: se puede ejecutar de nuevo sin perder nada.
+-- Para vaciar todo, borra las tablas a mano en un proyecto de pruebas (nunca en producción).
+-- En producción aplica solo los cambios de supabase/migrations/ (uno por fecha).
 
 create extension if not exists "pgcrypto";
 
@@ -413,7 +385,7 @@ create trigger trg_appointment_follow_up after update of status on public.appoin
 
 -- Per-client summary: follow-up count, appointments, balance, etc.
 drop view if exists public.client_summary;
-create view public.client_summary
+create or replace view public.client_summary
 with (security_invoker = true) as
 select
   c.id,
@@ -571,7 +543,7 @@ create table if not exists public.expenses (
   concept       text not null,
   category      text not null default 'otro'
                 check (category in ('hosting', 'herramientas', 'publicidad', 'sueldos', 'impuestos', 'oficina', 'servicios', 'otro')),
-  amount        numeric(12,2) not null check (amount > 0),
+  amount        numeric(12,2) not null check (amount >= 0),
   currency      text not null default 'PEN' check (currency in ('PEN', 'USD')),
   expense_date  date not null default current_date,
   platform      text,                                                      -- GoDaddy, Namecheap, Google Ads...
@@ -594,11 +566,10 @@ drop policy if exists team_select on public.expenses;
 drop policy if exists team_insert on public.expenses;
 drop policy if exists team_update on public.expenses;
 drop policy if exists team_delete on public.expenses;
-create policy team_select on public.expenses for select to authenticated using (public.is_team_member());
-create policy team_insert on public.expenses for insert to authenticated with check (public.is_team_member());
-create policy team_update on public.expenses for update to authenticated using (public.is_team_member()) with check (public.is_team_member());
--- Los gastos mal cargados los puede borrar cualquier miembro del equipo.
-create policy team_delete on public.expenses for delete to authenticated using (public.is_team_member());
+drop policy if exists admin_delete on public.expenses;
+drop policy if exists admin_all on public.expenses;
+-- Finanzas es solo para administradores.
+create policy admin_all on public.expenses for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
 drop trigger if exists trg_accounts_updated on public.accounts;
 create trigger trg_accounts_updated before update on public.accounts

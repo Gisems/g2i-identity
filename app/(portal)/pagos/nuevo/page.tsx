@@ -5,6 +5,7 @@ import { Topbar } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { todayLima } from "@/lib/format";
 import PaymentForm, { type PendingInstallment } from "./PaymentForm";
+import { fail } from "@/lib/errors";
 
 type Raw = {
   id: string;
@@ -29,7 +30,7 @@ export default async function AgregarPagoPage() {
     return (
       <>
         {back}
-        <div className="form-error" role="alert">No se pudieron cargar las cuotas: {error.message}</div>
+        <div className="form-error" role="alert">{fail("No se pudieron cargar las cuotas", error)}</div>
       </>
     );
   }

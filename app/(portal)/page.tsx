@@ -4,6 +4,7 @@ import { Badge, Empty, Panel, Stats, Topbar, btn } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { dateShort, money, timeShort, todayLima } from "@/lib/format";
 import { markFollowUpDoneAction } from "./actions";
+import { fail } from "@/lib/errors";
 
 type Money = { amount: number; currency: string };
 
@@ -99,7 +100,7 @@ export default async function PanelPage() {
         }
       />
 
-      {failed && <div className="form-error" role="alert">Algunos datos no se pudieron cargar: {failed.message}</div>}
+      {failed && <div className="form-error" role="alert">{fail("Algunos datos no se pudieron cargar", failed)}</div>}
 
       <Stats
         items={[
