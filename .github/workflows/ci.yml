@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
       - run: npm run lint
+      # PageProps y LayoutProps los genera Next (no existen en un checkout limpio).
+      - run: npx next typegen
       - run: npx tsc --noEmit
 
       # Gitleaks (CLI gratuito, sin licencia): busca secretos en todo el historial.
