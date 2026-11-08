@@ -196,9 +196,9 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
               <dl className="facts">
                 <dt>Rubro</dt><dd>{dash(d?.industry)}</dd>
                 <dt>Web actual</dt>
-                <dd>{d?.current_website ? <a href={d.current_website} target="_blank" rel="noreferrer">{d.current_website}</a> : "—"}</dd>
+                <dd>{d?.current_website && isHttpUrl(d.current_website) ? <a href={d.current_website} target="_blank" rel="noreferrer">{d.current_website}</a> : "—"}</dd>
                 <dt>Carpeta de Drive</dt>
-                <dd>{d?.drive_folder_url ? <a href={d.drive_folder_url} target="_blank" rel="noreferrer">Abrir carpeta</a> : "—"}</dd>
+                <dd>{d?.drive_folder_url && isHttpUrl(d.drive_folder_url) ? <a href={d.drive_folder_url} target="_blank" rel="noreferrer">Abrir carpeta</a> : "—"}</dd>
                 <dt>Descripción</dt><dd>{dash(d?.description)}</dd>
               </dl>
             </div>
