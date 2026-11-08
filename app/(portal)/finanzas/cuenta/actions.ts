@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { adminId } from "@/lib/team";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -28,7 +29,7 @@ export async function createAccountAction(_prev: FormState, fd: FormData): Promi
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { error } = await supabase.from("accounts").insert(parsed.row);
-  if (error) return { error: /duplicate|unique/i.test(error.message) ? "Ya existe una cuenta con ese nombre." : `No se pudo crear la cuenta: ${error.message}` };
+  if (error) return { error: /duplicate|unique/i.test(error.message) ? "Ya existe una cuenta con ese nombre." : fail("No se pudo crear la cuenta", error) };
   revalidatePath("/finanzas", "layout");
   return { ok: true };
 }
@@ -39,7 +40,7 @@ export async function updateAccountAction(id: string, _prev: FormState, fd: Form
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { error } = await supabase.from("accounts").update(parsed.row).eq("id", id);
-  if (error) return { error: /duplicate|unique/i.test(error.message) ? "Ya existe una cuenta con ese nombre." : `No se pudo guardar la cuenta: ${error.message}` };
+  if (error) return { error: /duplicate|unique/i.test(error.message) ? "Ya existe una cuenta con ese nombre." : fail("No se pudo guardar la cuenta", error) };
   revalidatePath("/finanzas", "layout");
   return { ok: true };
 }
@@ -60,7 +61,7 @@ export async function createDepositAction(_prev: FormState, fd: FormData): Promi
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { error } = await supabase.from("account_deposits").insert(parsed.row);
-  if (error) return { error: `No se pudo guardar el depósito: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar el depósito", error) };
   revalidatePath("/finanzas", "layout");
   return { ok: true };
 }
@@ -71,7 +72,7 @@ export async function updateDepositAction(id: string, _prev: FormState, fd: Form
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { error } = await supabase.from("account_deposits").update(parsed.row).eq("id", id);
-  if (error) return { error: `No se pudo guardar el depósito: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar el depósito", error) };
   revalidatePath("/finanzas", "layout");
   return { ok: true };
 }

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { dateShort, money, todayLima } from "@/lib/format";
 import { adminId } from "@/lib/team";
 import FinanceNav from "../FinanceNav";
+import { fail } from "@/lib/errors";
 
 type Pay = {
   id: string;
@@ -71,7 +72,7 @@ export default async function SueldosPage({ searchParams }: PageProps<"/finanzas
         <span className="range" style={{ textTransform: "capitalize" }}>{monthLabel(month)}</span>
       </div>
 
-      {error && <div className="form-error" role="alert">No se pudo cargar: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudo cargar", error)}</div>}
 
       <Stats
         items={[

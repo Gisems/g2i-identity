@@ -4,6 +4,7 @@ import { APPOINTMENT_STATUS, MODALITY, Panel, StatusBadge, Topbar, btn } from "@
 import { createClient } from "@/lib/supabase/server";
 import { addDays, dateShort, isoToLimaLocal, timeShort, todayLima } from "@/lib/format";
 import { markDoneAction } from "./actions";
+import { fail } from "@/lib/errors";
 
 type Row = {
   id: string;
@@ -219,7 +220,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/agenda">)
     <>
       <Topbar title="Agenda" sub={`${upcomingCount} cita${upcomingCount === 1 ? "" : "s"} próxima${upcomingCount === 1 ? "" : "s"}`} />
       {bar}
-      {error && <div className="form-error" role="alert">No se pudo cargar la agenda: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudo cargar la agenda", error)}</div>}
       {mode === "semana" ? week : listView}
     </>
   );

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { limaLocalToIso } from "@/lib/format";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -53,7 +54,7 @@ export async function createAppointmentAction(_prev: FormState, fd: FormData): P
   const { data: { user } } = await supabase.auth.getUser();
 
   const { error } = await supabase.from("appointments").insert({ ...parsed.row, manager_id: user?.id ?? null });
-  if (error) return { error: `No se pudo guardar la cita: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar la cita", error) };
 
   revalidatePath("/agenda");
   revalidatePath("/clientes", "layout");
@@ -67,7 +68,7 @@ export async function updateAppointmentAction(id: string, _prev: FormState, fd: 
   const supabase = await createClient();
 
   const { error } = await supabase.from("appointments").update(parsed.row).eq("id", id);
-  if (error) return { error: `No se pudo guardar la cita: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar la cita", error) };
 
   revalidatePath("/agenda");
   revalidatePath("/clientes", "layout");

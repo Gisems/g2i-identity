@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { CLIENT_STATUS, Chips, Empty, Panel, SearchBox, StatusBadge, Topbar, btn } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { dateShort, money } from "@/lib/format";
+import { fail } from "@/lib/errors";
 
 type Row = {
   id: string;
@@ -63,7 +64,7 @@ export default async function ClientesPage({ searchParams }: PageProps<"/cliente
         actions={<Link href="/clientes/nuevo" className={btn("cta")}><Plus /> Nuevo cliente</Link>}
       />
 
-      {error && <div className="form-error" role="alert">No se pudieron cargar los clientes: {error.message}</div>}
+      {error && <div className="form-error" role="alert">{fail("No se pudieron cargar los clientes", error)}</div>}
 
       <Panel>
         <div className="filters">

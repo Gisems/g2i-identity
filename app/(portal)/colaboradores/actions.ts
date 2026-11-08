@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { teamManagerId } from "@/lib/team";
+import { fail } from "@/lib/errors";
 
 export type FormState = { error?: string; ok?: boolean };
 
@@ -25,7 +26,8 @@ export async function createCollaboratorAction(_prev: FormState, fd: FormData): 
   try {
     admin = createAdminClient();
   } catch (e) {
-    return { error: (e as Error).message };
+    console.error("[createAdminClient]", (e as Error).message);
+    return { error: "El servidor no está configurado para crear cuentas." };
   }
 
   // Contraseña aleatoria que nadie conoce: el colaborador define la suya con "Olvidé mi contraseña".
@@ -37,13 +39,13 @@ export async function createCollaboratorAction(_prev: FormState, fd: FormData): 
   });
   if (error || !data.user) {
     const dup = /already|registered|exists/i.test(error?.message ?? "");
-    return { error: dup ? "Ya existe una cuenta con ese correo." : `No se pudo crear la cuenta: ${error?.message}` };
+    return { error: dup ? "Ya existe una cuenta con ese correo." : fail("No se pudo crear la cuenta", error ?? { message: "createUser sin usuario" }) };
   }
 
   const { error: insErr } = await admin.from("users").insert({ id: data.user.id, name, email, role });
   if (insErr) {
     await admin.auth.admin.deleteUser(data.user.id); // no dejar una cuenta sin perfil
-    return { error: `No se pudo guardar el perfil: ${insErr.message}` };
+    return { error: fail("No se pudo guardar el perfil", insErr) };
   }
 
   revalidatePath("/colaboradores");

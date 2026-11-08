@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Topbar } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
+import { adminId } from "@/lib/team";
 import { updateExpenseAction } from "../../actions";
 import ExpenseForm from "../../ExpenseForm";
 
 export default async function EditarGastoPage({ params }: PageProps<"/finanzas/gastos/[id]">) {
+  if (!(await adminId())) notFound();
   const { id } = await params;
   const supabase = await createClient();
   const [{ data: e }, { data: users }, { data: accounts }] = await Promise.all([

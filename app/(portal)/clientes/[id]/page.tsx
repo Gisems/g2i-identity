@@ -7,6 +7,7 @@ import {
 } from "@/components/pv";
 import ArchiveClientButton from "../ArchiveClientButton";
 import { createClient } from "@/lib/supabase/server";
+import { isHttpUrl } from "@/lib/url";
 import { dateShort, dateTime, initials, money, timeShort, todayLima } from "@/lib/format";
 
 type Color = { name: string; hex: string };
@@ -66,7 +67,9 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
   const s = summary.data;
   const d = details.data;
   const colors = (d?.brand_colors ?? []) as Color[];
-  const social = (d?.social_links ?? {}) as Record<string, string>;
+  const social = Object.fromEntries(
+    Object.entries((d?.social_links ?? {}) as Record<string, string>).filter(([, v]) => typeof v === "string" && isHttpUrl(v)),
+  );
   const projs = (projects.data ?? []) as unknown as Project[];
   const fu = followUps.data ?? [];
   const ap = appts.data ?? [];

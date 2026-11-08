@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { fail } from "@/lib/errors";
 
 export type PaymentState = { error?: string; ok?: boolean };
 
@@ -35,7 +36,7 @@ export async function saveInstallmentAction(id: string, _prev: PaymentState, fd:
       status: paidDate ? "pagada" : "pendiente",
     })
     .eq("id", id);
-  if (error) return { error: `No se pudo guardar: ${error.message}` };
+  if (error) return { error: fail("No se pudo guardar", error) };
 
   revalidatePath("/pagos");
   revalidatePath("/clientes", "layout");
@@ -59,7 +60,7 @@ export async function addPaymentAction(_prev: PaymentState, fd: FormData): Promi
     .update({ paid_date: paidDate, payment_method: method, operation_number: operation || null, status: "pagada" })
     .eq("id", id)
     .eq("status", "pendiente");
-  if (error) return { error: `No se pudo registrar el pago: ${error.message}` };
+  if (error) return { error: fail("No se pudo registrar el pago", error) };
 
   revalidatePath("/pagos");
   revalidatePath("/clientes", "layout");

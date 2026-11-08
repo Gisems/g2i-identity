@@ -1,12 +1,15 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { Topbar } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { todayLima } from "@/lib/format";
+import { adminId } from "@/lib/team";
 import { createExpenseAction } from "../../actions";
 import ExpenseForm from "../../ExpenseForm";
 
 export default async function NuevoGastoPage() {
+  if (!(await adminId())) notFound();
   const supabase = await createClient();
   const [{ data: { user } }, { data: users }, { data: accounts }] = await Promise.all([
     supabase.auth.getUser(),
