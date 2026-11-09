@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { genInstallments, type InstallmentDraft, type Modality } from "@/lib/installments";
 import { fail } from "@/lib/errors";
+import { todayLima } from "@/lib/format";
 import { PROJECT_SERVICES } from "@/lib/services";
 
 export type FormState = { error?: string };
@@ -14,11 +15,12 @@ const MODALITIES: Modality[] = ["contado", "adelanto_saldo", "cuotas", "recurren
 const STATUSES = ["solicitado", "propuesta", "aprobado", "en_curso", "en_revision", "entregado", "pausado", "cancelado"];
 const text = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
-type Plan = { modality: Modality; currency: "PEN" | "USD"; installments: InstallmentDraft[]; total: number };
+type Plan = { modality: Modality; currency: "PEN" | "USD"; installments: InstallmentDraft[]; total: number; free?: boolean };
 
 /**
  * El plan de pago es opcional: mientras no se acuerde el precio, el proyecto queda sin monto ni plan
  * y se completa después desde "Editar proyecto". Si se escribe un monto, el plan se valida completo.
+ * Un monto de 0 es un proyecto gratis: queda con un plan de una sola cuota en 0, ya pagada (nada que cobrar).
  */
 function parsePlan(fd: FormData): { error: string } | { plan: Plan | null } {
   const amountText = text(fd, "amount");
@@ -31,7 +33,11 @@ function parsePlan(fd: FormData): { error: string } | { plan: Plan | null } {
   const firstDue = text(fd, "first_due");
 
   if (!MODALITIES.includes(modality)) return { error: "Elige una modalidad de pago." };
-  if (!Number.isFinite(amount) || amount <= 0) return { error: "El monto debe ser mayor que 0." };
+  if (!Number.isFinite(amount) || amount < 0) return { error: "El monto no es válido." };
+  if (amount === 0) {
+    const due = /^\d{4}-\d{2}-\d{2}$/.test(firstDue) ? firstDue : todayLima();
+    return { plan: { modality: "contado", currency, installments: [{ number: 1, concept: "Gratis", amount: 0, due_date: due }], total: 0, free: true } };
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(firstDue)) return { error: "Indica la fecha del primer vencimiento." };
   if ((modality === "cuotas" || modality === "recurrente") && !(count >= 1 && count <= 60)) {
     return { error: "La cantidad de cuotas debe estar entre 1 y 60." };
@@ -76,7 +82,7 @@ async function savePlan(supabase: Supabase, projectId: string, plan: Plan): Prom
 
   const { error: instErr } = await supabase
     .from("installments")
-    .insert(plan.installments.map((i) => ({ ...i, payment_id: pay.id })));
+    .insert(plan.installments.map((i) => ({ ...i, payment_id: pay.id, ...(plan.free ? { paid_date: i.due_date, payment_method: "otro", status: "pagada" } : {}) })));
   if (instErr) return fail("Se creó el plan, pero no las cuotas", instErr);
 
   const { error: totalErr } = await supabase

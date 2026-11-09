@@ -32,6 +32,7 @@ export default async function EditarClientePage({ params }: PageProps<"/clientes
     drive_folder_url: d?.drive_folder_url ?? null,
     description: d?.description ?? null,
     reps: (reps.data ?? []).map((r) => ({ id: r.id, name: r.name, job_title: r.job_title, phone: r.phone, is_primary: r.is_primary })),
+    social: Object.fromEntries(Object.entries((d?.social_links ?? {}) as Record<string, unknown>).filter(([, v]) => typeof v === "string")) as Record<string, string>,
     colors: ((d?.brand_colors ?? []) as { name: string; hex: string }[]).map((x) => ({ name: x.name, hex: x.hex })),
   };
 

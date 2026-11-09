@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import CancelButton from "@/components/CancelButton";
 import { Plus, X } from "lucide-react";
 import { btn } from "@/components/pv";
+import { SOCIALS } from "@/lib/social";
 import type { FormState } from "./actions";
 
 export type ClientInitial = {
@@ -20,6 +21,7 @@ export type ClientInitial = {
   description: string | null;
   reps: { id: string; name: string; job_title: string | null; phone: string | null; is_primary: boolean }[];
   colors: { name: string; hex: string }[];
+  social: Record<string, string>;
 };
 
 function Field({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
@@ -55,7 +57,7 @@ export default function ClientForm({
   );
   const [primary, setPrimary] = useState(Math.max(0, initial?.reps.findIndex((r) => r.is_primary) ?? 0));
   const [colors, setColors] = useState<Color[]>(
-    initial?.colors.length ? initial.colors.map((c, i) => ({ key: 1000 + i, ...c })) : [{ key: 1000, name: "", hex: "#004952" }],
+    (initial?.colors ?? []).map((c, i) => ({ key: 1000 + i, ...c })),
   );
   const [nextKey, setNextKey] = useState(2000);
 
@@ -144,17 +146,26 @@ export default function ClientForm({
             </Field>
           </fieldset>
 
+          <fieldset>
+            <legend>Redes sociales</legend>
+            <div className="grid-2">
+              {SOCIALS.map(([key, label, placeholder]) => (
+                <Field key={key} id={`social_${key}`} label={label}>
+                  <input id={`social_${key}`} name={`social_${key}`} type="url" placeholder={placeholder} defaultValue={initial?.social[key] ?? ""} />
+                </Field>
+              ))}
+            </div>
+          </fieldset>
+
           <fieldset style={{ marginBottom: 0 }}>
             <legend>Colores de marca</legend>
             {colors.map((c) => (
               <div key={c.key} className="color-row">
                 <input name="color_name" placeholder="Nombre (ej. Primario)" aria-label="Nombre del color" defaultValue={c.name} />
                 <input name="color_hex" type="color" defaultValue={c.hex} aria-label="Color" />
-                {colors.length > 1 && (
-                  <button type="button" className={btn("ghost", "small")} aria-label="Quitar color" onClick={() => setColors(colors.filter((x) => x.key !== c.key))}>
-                    <X />
-                  </button>
-                )}
+                <button type="button" className={btn("ghost", "small")} aria-label="Quitar color" onClick={() => setColors(colors.filter((x) => x.key !== c.key))}>
+                  <X />
+                </button>
               </div>
             ))}
             <button type="button" className={btn("small")} onClick={() => { setColors([...colors, { key: nextKey, name: "", hex: "#004952" }]); setNextKey(nextKey + 1); }}>

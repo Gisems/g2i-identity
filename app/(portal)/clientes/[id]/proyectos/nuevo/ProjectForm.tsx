@@ -103,7 +103,7 @@ export default function ProjectForm({
           <fieldset style={{ marginBottom: 0 }}>
             <legend>Plan de pago (opcional)</legend>
             <p className="hint" style={{ marginTop: 0 }}>
-              Si todavía no acordaron el precio, déjalo vacío: el proyecto queda sin monto y lo completas después desde «Editar proyecto».
+              Si todavía no acordaron el precio, déjalo vacío: el proyecto queda sin monto y lo completas después desde «Editar proyecto». Si es gratis, escribe 0.
             </p>
             <div className="grid-2">
               <Field id="modality" label="Modalidad">
@@ -121,7 +121,7 @@ export default function ProjectForm({
                 </select>
               </Field>
               <Field id="amount" label={modality === "recurrente" ? "Monto de cada mes" : "Monto total"}>
-                <input id="amount" name="amount" type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="mono" />
+                <input id="amount" name="amount" type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="mono" />
               </Field>
               {usesCount && (
                 <Field id="count" label={modality === "recurrente" ? "Cantidad de meses" : "Cantidad de cuotas"}>

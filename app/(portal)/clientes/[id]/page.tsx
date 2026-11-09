@@ -7,13 +7,14 @@ import {
 } from "@/components/pv";
 import ArchiveClientButton from "../ArchiveClientButton";
 import FollowUpSelect from "./FollowUpSelect";
+import PaymentDialog from "../../pagos/PaymentDialog";
 import { createClient } from "@/lib/supabase/server";
 import { getProfile } from "@/lib/session";
 import { isHttpUrl } from "@/lib/url";
 import { dateShort, dateTime, initials, money, timeShort, todayLima } from "@/lib/format";
 
 type Color = { name: string; hex: string };
-type Installment = { id: string; number: number; concept: string | null; amount: number; due_date: string; paid_date: string | null; status: string };
+type Installment = { id: string; number: number; concept: string | null; amount: number; due_date: string; paid_date: string | null; payment_method: string | null; operation_number: string | null; status: string };
 type Project = {
   id: string;
   title: string;
@@ -21,6 +22,9 @@ type Project = {
   total_amount: number;
   currency: string;
   services: string[];
+  description: string | null;
+  start_date: string | null;
+  estimated_delivery_date: string | null;
   legacy_service: { name: string } | null;
   payments: { modality: string; installments: Installment[] } | null;
 };
@@ -58,7 +62,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
     supabase.from("follow_ups").select("*").eq("client_id", id).order("contacted_at", { ascending: false }),
     supabase
       .from("projects")
-      .select("id, title, status, total_amount, currency, services, legacy_service:services!service_id(name), payments(modality, installments(id, number, concept, amount, due_date, paid_date, status))")
+      .select("id, title, status, total_amount, currency, services, description, start_date, estimated_delivery_date, legacy_service:services!service_id(name), payments(modality, installments(id, number, concept, amount, due_date, paid_date, payment_method, operation_number, status))")
       .eq("client_id", id)
       .order("created_at", { ascending: false }),
     supabase.from("appointments").select("*").eq("client_id", id).order("start_at", { ascending: false }),
@@ -84,10 +88,13 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
   const followUpAdmin = adminList.find((a) => a.id === c.follow_up_admin_id);
   const canAssign = me?.active && me.role === "admin";
 
+  const pendingCount = projs.reduce((t, p) => t + (p.payments?.installments ?? []).filter((i) => i.status === "pendiente").length, 0);
+
   const tabs: [string, string, number?][] = [
     ["resumen", "Resumen"],
     ["marca", "Marca y assets"],
-    ["proyectos", "Proyectos y pagos", projs.length],
+    ["proyectos", "Proyectos", projs.length],
+    ["pagos", "Pagos", pendingCount || undefined],
     ["seguimientos", "Seguimientos", fu.length],
     ["citas", "Citas", ap.length],
   ];
@@ -254,6 +261,35 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
           {projs.length === 0 && (
             <Panel><Empty title="Aún no hay proyectos" text="Crea el primero. El plan de pago puedes definirlo ahora o después, cuando acuerden el precio: las cuotas se generan solas." /></Panel>
           )}
+          {projs.map((p) => (
+            <section key={p.id} className="panel" style={{ marginBottom: 18 }}>
+              <div className="panel-head">
+                <h2>{p.title}</h2>
+                <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+                  <Badge tone="info">{PROJECT_STATUS[p.status] ?? p.status}</Badge>
+                  <Link href={`/clientes/${id}/proyectos/${p.id}/editar`} className={btn("small")}>Editar</Link>
+                </span>
+              </div>
+              <div className="panel-body">
+                <dl className="facts">
+                  <dt>Servicios pedidos</dt>
+                  <dd>{p.services?.length ? p.services.join(", ") : p.legacy_service?.name ?? "—"}</dd>
+                  <dt>Descripción</dt><dd>{dash(p.description)}</dd>
+                  <dt>Inicio</dt><dd>{p.start_date ? dateShort(p.start_date) : "—"}</dd>
+                  <dt>Entrega estimada</dt><dd>{p.estimated_delivery_date ? dateShort(p.estimated_delivery_date) : "—"}</dd>
+                  <dt>Monto acordado</dt><dd className="mono">{Number(p.total_amount) > 0 ? money(p.total_amount, p.currency) : p.payments ? "Gratis" : "Por definir"}</dd>
+                </dl>
+              </div>
+            </section>
+          ))}
+        </>
+      )}
+
+      {tab === "pagos" && (
+        <>
+          {projs.length === 0 && (
+            <Panel><Empty title="Aún no hay proyectos" text="Los pagos se registran sobre las cuotas de un proyecto." href={`/clientes/${id}/proyectos/nuevo`} action="Nuevo proyecto" /></Panel>
+          )}
           {projs.map((p) => {
             const inst = [...(p.payments?.installments ?? [])].sort((a, b) => a.number - b.number);
             const active = inst.filter((i) => i.status !== "anulada");
@@ -267,40 +303,62 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
                 <div className="panel-head">
                   <div>
                     <h2>{p.title}</h2>
-                    <div className="cell-sub">
-                      {p.services?.length ? p.services.join(", ") : p.legacy_service?.name ?? "—"}
-                      {p.payments ? ` · ${MODALITY[p.payments.modality] ?? p.payments.modality}` : ""} · {PROJECT_STATUS[p.status] ?? p.status}
-                    </div>
+                    <div className="cell-sub">{p.payments ? MODALITY[p.payments.modality] ?? p.payments.modality : "Sin plan de pago"}</div>
                   </div>
                   <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
                     <StatusBadge map={PAYMENT_STATUS} value={paymentState} />
-                    <Link href={`/clientes/${id}/proyectos/${p.id}/editar`} className={btn("small")}>Editar</Link>
+                    <Link href={`/clientes/${id}/proyectos/${p.id}/editar`} className={btn("small")}>{p.payments ? "Editar plan" : "Definir plan"}</Link>
                   </span>
                 </div>
                 <div className="panel-body">
-                  <div className="progress">
-                    <span>{money(paidAmount, p.currency)} de {money(p.total_amount, p.currency)}</span>
-                    <div className="bar ok"><i style={{ width: `${Math.min(100, pct)}%` }} /></div>
-                    <strong>{pct}%</strong>
-                  </div>
+                  {p.payments && Number(p.total_amount) === 0 ? (
+                    <p className="muted" style={{ margin: 0 }}>Proyecto gratis: no hay nada que cobrar.</p>
+                  ) : (
+                    <div className="progress">
+                      <span>{money(paidAmount, p.currency)} de {money(p.total_amount, p.currency)}</span>
+                      <div className="bar ok"><i style={{ width: `${Math.min(100, pct)}%` }} /></div>
+                      <strong>{pct}%</strong>
+                    </div>
+                  )}
                 </div>
                 {inst.length > 0 && (
                   <div className="table-wrap">
                     <table>
-                      <thead><tr><th>Cuota</th><th className="num">Monto</th><th>Vence</th><th>Estado</th></tr></thead>
+                      <thead><tr><th>Cuota</th><th className="num">Monto</th><th>Vence</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead>
                       <tbody>
-                        {inst.map((i) => (
-                          <tr key={i.id}>
-                            <td>{i.concept ?? `Cuota ${i.number}`}</td>
-                            <td className="num mono">{money(i.amount, p.currency)}</td>
-                            <td className={i.status === "pendiente" && i.due_date < today ? "late" : ""}>{dateShort(i.due_date)}</td>
-                            <td>
-                              {i.status === "pagada" ? <Badge tone="ok">Pagada {dateShort(i.paid_date)}</Badge>
-                                : i.status === "anulada" ? <Badge>Anulada</Badge>
-                                : i.due_date < today ? <Badge tone="bad">Vencida</Badge> : <Badge tone="info">Pendiente</Badge>}
-                            </td>
-                          </tr>
-                        ))}
+                        {inst.map((i) => {
+                          const isPaid = i.status === "pagada";
+                          return (
+                            <tr key={i.id}>
+                              <td>{i.concept ?? `Cuota ${i.number}`}</td>
+                              <td className="num mono">{money(i.amount, p.currency)}</td>
+                              <td className={i.status === "pendiente" && i.due_date < today ? "late" : ""}>{dateShort(i.due_date)}</td>
+                              <td>
+                                {isPaid ? <Badge tone="ok">Pagada {dateShort(i.paid_date)}</Badge>
+                                  : i.status === "anulada" ? <Badge>Anulada</Badge>
+                                  : i.due_date < today ? <Badge tone="bad">Vencida</Badge> : <Badge tone="info">Pendiente</Badge>}
+                                {isPaid && i.payment_method && (
+                                  <div className="cell-sub capitalize">
+                                    {i.payment_method}
+                                    {i.operation_number && <> · <span className="mono">{i.operation_number}</span></>}
+                                  </div>
+                                )}
+                              </td>
+                              <td>
+                                {i.status !== "anulada" && (
+                                  <div className="row-actions">
+                                    <PaymentDialog
+                                      today={today}
+                                      label={isPaid ? "Editar" : "Registrar pago"}
+                                      primary={!isPaid}
+                                      row={{ id: i.id, concept: i.concept, amount: Number(i.amount), due_date: i.due_date, paid_date: i.paid_date, payment_method: i.payment_method, operation_number: i.operation_number }}
+                                    />
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
