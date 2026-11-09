@@ -6,7 +6,9 @@ import {
   Badge, Empty, Panel, StatusBadge, btn,
 } from "@/components/pv";
 import ArchiveClientButton from "../ArchiveClientButton";
+import FollowUpSelect from "./FollowUpSelect";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/session";
 import { isHttpUrl } from "@/lib/url";
 import { dateShort, dateTime, initials, money, timeShort, todayLima } from "@/lib/format";
 
@@ -18,12 +20,13 @@ type Project = {
   status: string;
   total_amount: number;
   currency: string;
-  services: { name: string } | null;
+  services: string[];
+  legacy_service: { name: string } | null;
   payments: { modality: string; installments: Installment[] } | null;
 };
 
 const PROJECT_STATUS: Record<string, string> = {
-  propuesta: "Propuesta", aprobado: "Aprobado", en_curso: "En curso", en_revision: "En revisión",
+  solicitado: "Solicitado", propuesta: "Propuesta", aprobado: "Aprobado", en_curso: "En curso", en_revision: "En revisión",
   entregado: "Entregado", pausado: "Pausado", cancelado: "Cancelado",
 };
 const SOURCE: Record<string, string> = {
@@ -47,7 +50,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
   const today = todayLima();
   const supabase = await createClient();
 
-  const [summary, client, reps, details, followUps, projects, appts, diags] = await Promise.all([
+  const [summary, client, reps, details, followUps, projects, appts, diags, admins, me] = await Promise.all([
     supabase.from("client_summary").select("*").eq("id", id).maybeSingle(),
     supabase.from("clients").select("*").eq("id", id).maybeSingle(),
     supabase.from("representatives").select("*").eq("client_id", id).order("is_primary", { ascending: false }),
@@ -55,11 +58,13 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
     supabase.from("follow_ups").select("*").eq("client_id", id).order("contacted_at", { ascending: false }),
     supabase
       .from("projects")
-      .select("id, title, status, total_amount, currency, services(name), payments(modality, installments(id, number, concept, amount, due_date, paid_date, status))")
+      .select("id, title, status, total_amount, currency, services, legacy_service:services!service_id(name), payments(modality, installments(id, number, concept, amount, due_date, paid_date, status))")
       .eq("client_id", id)
       .order("created_at", { ascending: false }),
     supabase.from("appointments").select("*").eq("client_id", id).order("start_at", { ascending: false }),
     supabase.from("diagnostics").select("id, analyzed_url, status, overall_score, requested_date").eq("client_id", id).order("requested_date", { ascending: false }),
+    supabase.from("users").select("id, name, active").eq("role", "admin").order("name"),
+    getProfile(),
   ]);
 
   if (!client.data || !summary.data) notFound();
@@ -74,6 +79,10 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
   const fu = followUps.data ?? [];
   const ap = appts.data ?? [];
   const dg = diags.data ?? [];
+  // Admins activos para elegir; si el asignado ya está desactivado, se conserva para que se vea quién era.
+  const adminList = (admins.data ?? []).filter((a) => a.active || a.id === c.follow_up_admin_id);
+  const followUpAdmin = adminList.find((a) => a.id === c.follow_up_admin_id);
+  const canAssign = me?.active && me.role === "admin";
 
   const tabs: [string, string, number?][] = [
     ["resumen", "Resumen"],
@@ -149,10 +158,10 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
             </ul>
           </Panel>
 
-          <Panel title="Relación con el cliente">
+          <Panel title="Relación con el cliente" action={canAssign ? <FollowUpSelect clientId={id} current={c.follow_up_admin_id ?? null} admins={adminList.map(({ id: aid, name }) => ({ id: aid, name }))} /> : undefined}>
             <div className="panel-body">
               <dl className="facts">
-                <dt>Responsable</dt><dd>{dash(s.owner_name)}</dd>
+                <dt>Seguimiento a cargo de</dt><dd>{followUpAdmin?.name ?? "Sin asignar"}</dd>
                 <dt>Seguimientos</dt><dd><strong>{s.total_follow_ups}</strong> en total · {s.follow_ups_last_30_days} en los últimos 30 días</dd>
                 <dt>Último contacto</dt>
                 <dd>
@@ -243,7 +252,7 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
             <Link href={`/clientes/${id}/proyectos/nuevo`} className={btn("cta")}><Plus /> Nuevo proyecto</Link>
           </div>
           {projs.length === 0 && (
-            <Panel><Empty title="Aún no hay proyectos" text="Crea el primero y define su plan de pago: las cuotas se generan solas." /></Panel>
+            <Panel><Empty title="Aún no hay proyectos" text="Crea el primero. El plan de pago puedes definirlo ahora o después, cuando acuerden el precio: las cuotas se generan solas." /></Panel>
           )}
           {projs.map((p) => {
             const inst = [...(p.payments?.installments ?? [])].sort((a, b) => a.number - b.number);
@@ -259,11 +268,14 @@ export default async function ClientePage({ params, searchParams }: PageProps<"/
                   <div>
                     <h2>{p.title}</h2>
                     <div className="cell-sub">
-                      {p.services?.name ?? "—"}
+                      {p.services?.length ? p.services.join(", ") : p.legacy_service?.name ?? "—"}
                       {p.payments ? ` · ${MODALITY[p.payments.modality] ?? p.payments.modality}` : ""} · {PROJECT_STATUS[p.status] ?? p.status}
                     </div>
                   </div>
-                  <span style={{ marginLeft: "auto" }}><StatusBadge map={PAYMENT_STATUS} value={paymentState} /></span>
+                  <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+                    <StatusBadge map={PAYMENT_STATUS} value={paymentState} />
+                    <Link href={`/clientes/${id}/proyectos/${p.id}/editar`} className={btn("small")}>Editar</Link>
+                  </span>
                 </div>
                 <div className="panel-body">
                   <div className="progress">

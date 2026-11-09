@@ -14,7 +14,6 @@ export type ClientInitial = {
   email: string | null;
   city: string | null;
   status: string;
-  source: string | null;
   industry: string | null;
   current_website: string | null;
   drive_folder_url: string | null;
@@ -83,18 +82,6 @@ export default function ClientForm({
                   <option value="activo">Activo</option>
                   <option value="inactivo">Desactivado</option>
                   <option value="perdido">Perdido</option>
-                </select>
-              </Field>
-              <Field id="source" label="Origen">
-                <select id="source" name="source" defaultValue={initial?.source ?? ""}>
-                  <option value="">—</option>
-                  <option value="web">Web</option>
-                  <option value="diagnostico">Diagnóstico</option>
-                  <option value="whatsapp">WhatsApp</option>
-                  <option value="referido">Referido</option>
-                  <option value="redes">Redes</option>
-                  <option value="evento">Evento</option>
-                  <option value="otro">Otro</option>
                 </select>
               </Field>
             </div>
