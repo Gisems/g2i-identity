@@ -5,6 +5,11 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # typescript-eslint (que trae eslint-config-next) aún no soporta TypeScript 7 y el lint falla en la CI.
+      # Se queda en la serie 5.x; quitar esta regla cuando typescript-eslint lo soporte.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:

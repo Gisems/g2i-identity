@@ -3,12 +3,13 @@ import AppSidebar from "@/components/AppSidebar";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { createClient } from "@/lib/supabase/server";
-import { getProfile, getSessionUser } from "@/lib/session";
+import { getProfile, getSessionUser, needsMfa } from "@/lib/session";
 import "../portal.css";
 
 export default async function PortalLayout({ children, drawer }: { children: React.ReactNode; drawer: React.ReactNode }) {
   const user = await getSessionUser();
   if (!user) redirect("/login");
+  if (await needsMfa()) redirect("/verificar-2fa");
 
   // Debe existir en public.users y estar activo (RLS ya lo exige para leer datos).
   const perfil = await getProfile();
