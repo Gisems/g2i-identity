@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
   description: "Portal interno de clientes de G2I Digital",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // El nonce de la CSP es distinto en cada petición, así que ninguna página puede ser estática.
+  await connection();
   return (
     <html lang="es-PE" className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full`}>
       <head>
