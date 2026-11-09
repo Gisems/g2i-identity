@@ -112,3 +112,44 @@
     @apply font-display font-bold tracking-tight;
   }
 }
+
+/* Código de verificación: casillas separadas en forma de guion bajo (_ _ _ _ _ _). */
+.otp {
+  display: flex;
+  gap: 12px;
+}
+.otp input.otp-box {
+  width: 38px;
+  height: 52px;
+  padding: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  transition: border-color 0.15s;
+}
+.otp input.otp-box:hover {
+  border-bottom-color: var(--muted-foreground);
+}
+.otp input.otp-box:focus {
+  outline: none;
+  border-bottom-color: var(--ring);
+  box-shadow: none;
+}
+.otp input.otp-box:disabled {
+  opacity: 0.5;
+}
+@media (max-width: 380px) {
+  .otp {
+    gap: 8px;
+  }
+  .otp input.otp-box {
+    width: 32px;
+  }
+}
