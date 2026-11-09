@@ -7,6 +7,7 @@ import { getProfile } from "@/lib/session";
 import { NO_ACCESS, adminId, teamMemberId } from "@/lib/team";
 import { isHttpUrl } from "@/lib/url";
 import { fail } from "@/lib/errors";
+import { SOCIALS } from "@/lib/social";
 
 export type FormState = { error?: string };
 
@@ -58,6 +59,13 @@ function parseCommon(fd: FormData) {
     .map((hex, i) => ({ name: colorNames[i]?.trim() || `Color ${i + 1}`, hex }))
     .filter((c) => /^#[0-9a-fA-F]{6}$/.test(c.hex));
 
+  const social: Record<string, string | null> = {};
+  for (const [key, label] of SOCIALS) {
+    const url = val(fd, `social_${key}`);
+    if (url && !isHttpUrl(url)) return { error: `El enlace de ${label} debe empezar con http:// o https://.` as const };
+    social[key] = url;
+  }
+
   const details = {
     industry: val(fd, "industry"),
     current_website: website,
@@ -66,7 +74,7 @@ function parseCommon(fd: FormData) {
     brand_colors,
   };
 
-  return { client, reps, details };
+  return { client, reps, details, social };
 }
 
 const dupMessage = (error: { code?: string; message: string }) =>
@@ -77,7 +85,7 @@ export async function createClientAction(_prev: FormState, fd: FormData): Promis
   if (!profile?.active) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
-  const { client, reps, details } = parsed;
+  const { client, reps, details, social } = parsed;
   const supabase = await createClient();
 
   // Origen: el nombre de quien lo crea desde el portal ("web" lo pone la landing).
@@ -88,7 +96,7 @@ export async function createClientAction(_prev: FormState, fd: FormData): Promis
     reps.length
       ? supabase.from("representatives").insert(reps.map(({ id: _id, ...r }) => ({ ...r, client_id: created.id })))
       : Promise.resolve({ error: null }),
-    supabase.from("client_details").insert({ client_id: created.id, ...details }),
+    supabase.from("client_details").insert({ client_id: created.id, ...details, social_links: Object.fromEntries(Object.entries(social).filter(([, v]) => v)) }),
   ]);
   revalidatePath("/clientes");
   redirect(`/clientes/${created.id}${repRes.error || detRes.error ? "?aviso=parcial" : ""}`);
@@ -98,13 +106,18 @@ export async function updateClientAction(id: string, _prev: FormState, fd: FormD
   if (!(await teamMemberId())) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
-  const { client, reps, details } = parsed;
+  const { client, reps, details, social } = parsed;
   const supabase = await createClient();
 
   const { error } = await supabase.from("clients").update(client).eq("id", id);
   if (error) return { error: dupMessage(error) };
 
-  const { error: detErr } = await supabase.from("client_details").upsert({ client_id: id, ...details });
+  // Se conservan las redes que ya estaban guardadas y no están en el formulario (p. ej. las que llegan de la landing).
+  const { data: current } = await supabase.from("client_details").select("social_links").eq("client_id", id).maybeSingle();
+  const merged = { ...((current?.social_links ?? {}) as Record<string, unknown>), ...social };
+  const social_links = Object.fromEntries(Object.entries(merged).filter(([, v]) => v));
+
+  const { error: detErr } = await supabase.from("client_details").upsert({ client_id: id, ...details, social_links });
   if (detErr) return { error: fail("Se guardó el cliente, pero no los detalles de marca", detErr) };
 
   // Un solo principal por cliente: se limpia antes de marcar el nuevo.
