@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { NO_ACCESS, teamMemberId } from "@/lib/team";
+import { getProfile } from "@/lib/session";
+import { NO_ACCESS, adminId, teamMemberId } from "@/lib/team";
 import { isHttpUrl } from "@/lib/url";
 import { fail } from "@/lib/errors";
 
@@ -32,7 +33,6 @@ function parseCommon(fd: FormData) {
     email: val(fd, "email"),
     city: val(fd, "city"),
     status: val(fd, "status") ?? "prospecto",
-    source: val(fd, "source"),
   };
 
   const ids = fd.getAll("rep_id").map(String);
@@ -73,14 +73,15 @@ const dupMessage = (error: { code?: string; message: string }) =>
   error.code === "23505" ? "Ya existe un cliente con ese RUC." : fail("No se pudo guardar", error);
 
 export async function createClientAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  if (!(await teamMemberId())) return { error: NO_ACCESS };
+  const profile = await getProfile();
+  if (!profile?.active) return { error: NO_ACCESS };
   const parsed = parseCommon(fd);
   if ("error" in parsed) return { error: parsed.error };
   const { client, reps, details } = parsed;
   const supabase = await createClient();
 
-  // owner_id lo asigna la base con el usuario logueado
-  const { data: created, error } = await supabase.from("clients").insert(client).select("id").single();
+  // Origen: el nombre de quien lo crea desde el portal ("web" lo pone la landing).
+  const { data: created, error } = await supabase.from("clients").insert({ ...client, source: profile.name }).select("id").single();
   if (error) return { error: dupMessage(error) };
 
   const [repRes, detRes] = await Promise.all([
@@ -137,5 +138,23 @@ export async function setClientActiveAction(id: string, active: boolean): Promis
   revalidatePath("/clientes", "layout");
   revalidatePath("/");
   if (!active) redirect("/clientes");
+  return {};
+}
+
+/** Asigna (o quita, con null) el administrador que le hace seguimiento al cliente. Solo lo hacen los administradores. */
+export async function setFollowUpAdminAction(clientId: string, userId: string | null): Promise<{ error?: string }> {
+  if (!(await adminId())) return { error: NO_ACCESS };
+  const supabase = await createClient();
+
+  if (userId) {
+    const { data: target } = await supabase.from("users").select("id").eq("id", userId).eq("role", "admin").eq("active", true).maybeSingle();
+    if (!target) return { error: "Elige un administrador activo." };
+  }
+
+  const { data, error } = await supabase.from("clients").update({ follow_up_admin_id: userId }).eq("id", clientId).select("id");
+  if (error) return { error: fail("No se pudo asignar el seguimiento", error) };
+  if (!data?.length) return { error: NO_ACCESS };
+
+  revalidatePath(`/clientes/${clientId}`);
   return {};
 }

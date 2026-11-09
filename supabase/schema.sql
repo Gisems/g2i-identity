@@ -63,40 +63,14 @@ create table if not exists public.clients (
   address     text,
   status      text not null default 'prospecto'
               check (status in ('prospecto', 'activo', 'inactivo', 'perdido')),
-  source      text
-              check (source in ('web', 'diagnostico', 'whatsapp', 'referido', 'redes', 'evento', 'otro')),
-  -- OWNER: who registered the client. Set automatically from the logged-in user (auth.uid()).
-  -- A user who owns clients cannot be deleted: deactivate them (users.active = false) or reassign first.
-  owner_id    uuid not null default auth.uid() references public.users(id) on delete restrict,
+  -- Origin: 'web' if it came from the landing; otherwise the name of the team member who created it.
+  source      text,
+  follow_up_admin_id uuid references public.users(id) on delete set null,  -- admin que le hace seguimiento
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
-create index if not exists idx_clients_owner  on public.clients(owner_id);
 create index if not exists idx_clients_status on public.clients(status);
 create index if not exists idx_clients_name   on public.clients using gin (to_tsvector('spanish', name));
-
--- The owner is always whoever uploads the client. Only an admin can assign/reassign.
--- (From the SQL Editor or service_role there is no auth.uid(): the given owner_id is kept.)
-create or replace function public.protect_client_owner()
-returns trigger language plpgsql as $$
-begin
-  if auth.uid() is null then
-    return new;
-  end if;
-  if tg_op = 'INSERT' then
-    if new.owner_id is null or not public.is_admin() then
-      new.owner_id := auth.uid();
-    end if;
-  elsif new.owner_id is distinct from old.owner_id and not public.is_admin() then
-    new.owner_id := old.owner_id;
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists trg_clients_owner on public.clients;
-create trigger trg_clients_owner before insert or update on public.clients
-  for each row execute function public.protect_client_owner();
 
 -- ---------------------------------------------------------------------
 -- 3. Representatives (one or many per client)
@@ -164,11 +138,14 @@ create table if not exists public.services (
 create table if not exists public.projects (
   id                       uuid primary key default gen_random_uuid(),
   client_id                uuid not null references public.clients(id) on delete cascade,
-  service_id               uuid not null references public.services(id),
+  service_id               uuid references public.services(id),  -- legacy: ahora se usa "services"
+  -- Servicios pedidos (multiselect): solo valores de la lista fija.
+  services                 text[] not null default '{}'
+                           check (services <@ array['Web nueva', 'Tienda online', 'Automatización', 'SEO', 'Integraciones (CRM, pagos, WhatsApp)', 'Aún no lo sé']::text[]),
   title                    text not null,
   description              text,
   status                   text not null default 'propuesta'
-                           check (status in ('propuesta', 'aprobado', 'en_curso', 'en_revision', 'entregado', 'pausado', 'cancelado')),
+                           check (status in ('solicitado', 'propuesta', 'aprobado', 'en_curso', 'en_revision', 'entregado', 'pausado', 'cancelado')),
   total_amount             numeric(12,2) not null default 0,
   currency                 text not null default 'PEN' check (currency in ('PEN', 'USD')),
   start_date               date,
@@ -263,6 +240,7 @@ create table if not exists public.diagnostics (
   improvement_points    jsonb not null default '[]'::jsonb,
   overall_score         int check (overall_score between 0 and 100),
   mockup_url            text,                    -- visual proposal of how it would look
+  request_notes         text,                    -- what the visitor wrote in the landing form
   report_path           text,                    -- report PDF (bucket "diagnostics")
   manager_id            uuid references public.users(id) on delete set null,
   converted_project_id  uuid references public.projects(id) on delete set null,
@@ -393,8 +371,6 @@ select
   c.ruc,
   c.status,
   c.phone,
-  c.owner_id,
-  ow.name                                          as owner_name,
   rp.name                                          as primary_representative,
   coalesce(f.total_follow_ups, 0)                  as total_follow_ups,
   coalesce(f.follow_ups_last_30_days, 0)           as follow_ups_last_30_days,
@@ -410,7 +386,6 @@ select
   coalesce(d.pending_balance, 0)                   as pending_balance,
   coalesce(d.overdue_installments, 0)              as overdue_installments
 from public.clients c
-left join public.users ow on ow.id = c.owner_id
 left join lateral (
   select r.name from public.representatives r
   where r.client_id = c.id order by r.is_primary desc, r.created_at limit 1
@@ -670,3 +645,153 @@ on conflict (name) do nothing;
 --    values ('USER-UUID', 'First Last', 'email@g2i.com', 'admin');
 -- 3. Authentication → Sign In / Providers → Email: turn off "Allow new users to sign up".
 -- =====================================================================
+
+-- ---------------------------------------------------------------------
+-- 16. Landing requests (diagnóstico gratis y solicitud de proyecto)
+-- ---------------------------------------------------------------------
+-- El servidor de la landing llama a esta función con la clave pública (anon) y un secreto compartido.
+-- Sin el secreto correcto rechaza la llamada, así que nadie puede usarla directo desde internet.
+-- Solo crea prospectos: no lee ni modifica datos de clientes que ya existen.
+create table if not exists public.lead_settings (
+  key   text primary key,
+  value text not null
+);
+alter table public.lead_settings enable row level security;   -- sin políticas: la API no la expone
+revoke all on public.lead_settings from anon, authenticated;
+
+create or replace function public.register_landing_request(p_secret text, p_payload jsonb)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_hash      text;
+  v_kind      text;
+  v_person    text;
+  v_company   text;
+  v_email     text;
+  v_phone     text;
+  v_web       text;
+  v_message   text;
+  v_services  text[];
+  v_client_id uuid;
+  v_title     text;
+  v_recent    int;
+begin
+  select value into v_hash from public.lead_settings where key = 'landing_secret_sha256';
+  if v_hash is null or p_secret is null
+     or encode(sha256(convert_to(p_secret, 'UTF8')), 'hex') <> v_hash then
+    raise exception 'forbidden' using errcode = '42501';
+  end if;
+
+  if p_payload is null or jsonb_typeof(p_payload) <> 'object' then
+    raise exception 'invalid_payload' using errcode = '22023';
+  end if;
+
+  v_kind    := p_payload ->> 'kind';
+  v_person  := left(btrim(coalesce(p_payload ->> 'name', '')), 100);
+  v_company := left(btrim(coalesce(p_payload ->> 'company', '')), 120);
+  v_email   := lower(left(btrim(coalesce(p_payload ->> 'email', '')), 254));
+  v_phone   := nullif(left(btrim(coalesce(p_payload ->> 'phone', '')), 30), '');
+  v_web     := nullif(left(btrim(coalesce(p_payload ->> 'web', '')), 300), '');
+  v_message := nullif(left(btrim(coalesce(p_payload ->> 'message', '')), 2000), '');
+
+  if v_kind is null or v_kind not in ('diagnostico', 'diagnostico_extra', 'proyecto') then
+    raise exception 'invalid_payload' using errcode = '22023';
+  end if;
+  if v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'invalid_payload' using errcode = '22023';
+  end if;
+  -- Solo enlaces http(s): se muestran como enlace en el portal.
+  if v_web is not null and v_web !~* '^https?://[^\s]+$' then
+    v_web := null;
+  end if;
+
+  -- Tope de seguridad: si alguien se salta la landing y llena la base, la función se cierra sola un rato.
+  select (select count(*) from public.diagnostics where created_at > now() - interval '1 hour')
+       + (select count(*) from public.projects
+          where status = 'solicitado' and created_at > now() - interval '1 hour')
+    into v_recent;
+  if v_recent >= 40 then
+    raise exception 'rate_limited' using errcode = '54000';
+  end if;
+
+  -- Respuestas opcionales de la pantalla de confirmación del diagnóstico: se agregan a la solicitud reciente.
+  if v_kind = 'diagnostico_extra' then
+    if v_message is null or v_web is null then
+      return;
+    end if;
+    update public.diagnostics
+       set request_notes = left(coalesce(request_notes || E'\n', '') || v_message, 3000)
+     where id = (
+       select d.id
+         from public.diagnostics d
+         join public.clients c on c.id = d.client_id
+        where lower(c.email) = v_email
+          and d.analyzed_url = v_web
+          and d.status = 'solicitado'
+          and d.created_at > now() - interval '24 hours'
+        order by d.created_at desc
+        limit 1);
+    return;
+  end if;
+
+  if v_person = '' then
+    raise exception 'invalid_payload' using errcode = '22023';
+  end if;
+  if v_kind = 'diagnostico' and v_web is null then
+    raise exception 'invalid_payload' using errcode = '22023';
+  end if;
+
+  -- Un correo ya registrado reutiliza al cliente sin tocar sus datos.
+  select id into v_client_id
+    from public.clients
+   where lower(email) = v_email
+   order by created_at
+   limit 1;
+
+  if v_client_id is null then
+    insert into public.clients (name, email, phone, status, source)
+    values (coalesce(nullif(v_company, ''), v_person), v_email, v_phone, 'prospecto', 'web')
+    returning id into v_client_id;
+
+    insert into public.representatives (client_id, name, phone, email, is_primary)
+    values (v_client_id, v_person, v_phone, v_email, true);
+
+    insert into public.client_details (client_id, current_website)
+    values (v_client_id, v_web);
+  end if;
+
+  if v_kind = 'diagnostico' then
+    insert into public.diagnostics (client_id, analyzed_url, status, request_notes)
+    values (v_client_id, v_web, 'solicitado', v_message);
+  else
+    -- Solo servicios de la lista fija (sin repetir).
+    select coalesce(array_agg(distinct s), '{}') into v_services
+      from (
+        select left(btrim(e), 60) as s
+          from jsonb_array_elements_text(
+                 case when jsonb_typeof(p_payload -> 'services') = 'array'
+                      then p_payload -> 'services' else '[]'::jsonb end) as e
+         limit 12
+      ) t
+     where s = any (array['Web nueva', 'Tienda online', 'Automatización', 'SEO', 'Integraciones (CRM, pagos, WhatsApp)', 'Aún no lo sé']::text[]);
+
+    v_title := left(
+      coalesce(nullif(v_company, ''), v_person) || ' - ' ||
+      case when cardinality(array_remove(v_services, 'Aún no lo sé')) = 0 then 'Por definir'
+           else array_to_string(array_remove(v_services, 'Aún no lo sé'), ', ') end,
+      200);
+
+    insert into public.projects (client_id, title, description, status, services)
+    values (v_client_id, v_title, v_message, 'solicitado', v_services);
+  end if;
+end;
+$$;
+
+revoke all on function public.register_landing_request(text, jsonb) from public, anon, authenticated;
+grant execute on function public.register_landing_request(text, jsonb) to anon;
+
+-- Secreto compartido con la landing (se guarda solo su hash). Ejecútalo una vez, con un secreto largo y aleatorio,
+-- y pon el mismo secreto en la variable LEAD_SECRET de Netlify:
+--   insert into public.lead_settings (key, value)
+--   values ('landing_secret_sha256', encode(sha256(convert_to('PEGA-AQUI-EL-SECRETO', 'UTF8')), 'hex'))
+--   on conflict (key) do update set value = excluded.value;

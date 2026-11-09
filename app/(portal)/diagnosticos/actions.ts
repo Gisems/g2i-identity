@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getProfile } from "@/lib/session";
 import { NO_ACCESS, teamMemberId } from "@/lib/team";
 import { isHttpUrl } from "@/lib/url";
 import { fail } from "@/lib/errors";
@@ -57,16 +58,17 @@ export async function createDiagnosticAction(_prev: FormState, fd: FormData): Pr
   if ("error" in parsed) return { error: parsed.error };
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const profile = await getProfile();
 
   let clientId = text(fd, "client_id");
   const newName = text(fd, "new_client_name");
   if (!clientId && !newName) return { error: "Elige un cliente o escribe el nombre de uno nuevo." };
 
-  // Un diagnóstico para alguien que aún no es cliente lo registra como prospecto con origen "diagnóstico".
+  // Un diagnóstico para alguien que aún no es cliente lo registra como prospecto; el origen es el nombre de quien lo crea.
   if (!clientId) {
     const { data: created, error } = await supabase
       .from("clients")
-      .insert({ name: newName, status: "prospecto", source: "diagnostico" })
+      .insert({ name: newName, status: "prospecto", source: profile?.name ?? null })
       .select("id")
       .single();
     if (error) return { error: fail("No se pudo crear el cliente", error) };

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { Topbar } from "@/components/pv";
+import { Panel, Topbar } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { updateDiagnosticAction } from "../actions";
 import DiagnosticForm from "../DiagnosticForm";
@@ -25,6 +25,11 @@ export default async function EditarDiagnosticoPage({ params }: PageProps<"/diag
     <>
       <Link href="/diagnosticos" className="back"><ChevronLeft /> Diagnósticos</Link>
       <Topbar title="Editar diagnóstico" sub={clientName} />
+      {d.request_notes && (
+        <Panel title="Lo que escribió el cliente al solicitarlo">
+          <div className="panel-body" style={{ whiteSpace: "pre-wrap" }}>{d.request_notes}</div>
+        </Panel>
+      )}
       <DiagnosticForm
         action={updateDiagnosticAction.bind(null, id)}
         clients={[]}

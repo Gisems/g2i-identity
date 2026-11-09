@@ -27,7 +27,6 @@ export default async function EditarClientePage({ params }: PageProps<"/clientes
     email: c.email,
     city: c.city,
     status: c.status,
-    source: c.source,
     industry: d?.industry ?? null,
     current_website: d?.current_website ?? null,
     drive_folder_url: d?.drive_folder_url ?? null,
