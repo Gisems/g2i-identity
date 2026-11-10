@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { Empty, Panel, Stats, Topbar, btn } from "@/components/pv";
+import { Empty, Panel, Topbar, btn } from "@/components/pv";
 import { createClient } from "@/lib/supabase/server";
 import { addDays, dateShort, money, todayLima } from "@/lib/format";
 import { notFound } from "next/navigation";
 import { adminId } from "@/lib/team";
 import FinanceNav from "./FinanceNav";
+import FlowChart from "./FlowChart";
 import { fail } from "@/lib/errors";
 
 type Income = {
@@ -88,7 +89,7 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
   const toCollect = sumBy(pending, (r) => r.payments.projects.currency, (r) => r.amount);
   const overdue = sumBy(pending.filter((r) => r.due_date < today), (r) => r.payments.projects.currency, (r) => r.amount);
 
-  const currencies = ["PEN", ...["USD"].filter((c) => [collected, spent, toCollect, wages].some((m) => m.has(c)))];
+  const currencies = ["PEN", "USD"];
   const NAMES: Record<string, string> = { PEN: "Soles (S/)", USD: "Dólares (US$)" };
   const href = (m: string) => `/finanzas?m=${m}`;
 
@@ -111,27 +112,44 @@ export default async function FinanzasPage({ searchParams }: PageProps<"/finanza
 
       {error && <div className="form-error" role="alert">{fail("No se pudo cargar Finanzas", error)}</div>}
 
-      {currencies.map((cur) => {
-        const c = collected.get(cur) ?? 0;
-        const g = spent.get(cur) ?? 0;
-        const w = wages.get(cur) ?? 0;
-        const balance = round(c - g - w);
-        return (
-          <div key={cur} style={{ marginBottom: 18 }}>
-            {currencies.length > 1 && <h3 style={{ margin: "0 0 8px" }}>{NAMES[cur]}</h3>}
-            <Stats
-              items={[
-                [money(c, cur), "Cobrado de clientes en el mes"],
-                [money(g, cur), "Gastos del mes"],
-                [money(w, cur), "Sueldos del mes"],
-                [money(balance, cur), "Balance del mes", balance < 0],
-                [money(toCollect.get(cur) ?? 0, cur), "Por cobrar (total)"],
-                [money(overdue.get(cur) ?? 0, cur), "Vencido", (overdue.get(cur) ?? 0) > 0],
-              ]}
-            />
-          </div>
-        );
-      })}
+      <div className="cols">
+        {currencies.map((cur) => {
+          const c = collected.get(cur) ?? 0;
+          const g = spent.get(cur) ?? 0;
+          const w = wages.get(cur) ?? 0;
+          const od = overdue.get(cur) ?? 0;
+          const balance = round(c - g - w);
+          const rows: [string, number, string?][] = [
+            ["Cobrado de clientes", c],
+            ["Gastos", g],
+            ["Sueldos", w],
+            ["Balance del mes", balance, balance < 0 ? "late" : ""],
+            ["Por cobrar (total)", toCollect.get(cur) ?? 0],
+            ["Vencido", od, od > 0 ? "late" : ""],
+          ];
+          return (
+            <Panel key={cur} title={NAMES[cur]} className="min-w-0">
+              <div className="panel-body">
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(105px, 1fr))", gap: "12px 16px", marginBottom: 16 }}>
+                  {rows.map(([label, v, cls]) => (
+                    <div key={label} style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.3 }}>{label}</div>
+                      <div className={`mono ${cls ?? ""}`} style={{ fontSize: 16, fontWeight: 600, marginTop: 2, whiteSpace: "nowrap" }}>{money(v, cur)}</div>
+                    </div>
+                  ))}
+                </div>
+                <FlowChart
+                  month={month}
+                  upTo={month === today.slice(0, 7) ? Number(today.slice(8, 10)) : 31}
+                  cur={cur}
+                  income={income.filter((r) => r.payments.projects.currency === cur).map((r) => [r.paid_date, r.amount])}
+                  spend={expenses.filter((e) => e.currency === cur).map((e) => [e.expense_date, e.amount])}
+                />
+              </div>
+            </Panel>
+          );
+        })}
+      </div>
 
       <Panel title="Cobros de clientes del mes">
         <div className="table-wrap">
