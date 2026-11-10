@@ -22,7 +22,9 @@ function LoginForm() {
       ? "El enlace expiró o no es válido."
       : params.get("error") === "sin-acceso"
         ? "Tu usuario no tiene acceso al portal."
-        : "",
+        : params.get("error") === "sesion"
+          ? "Tu sesión expiró. Inicia sesión de nuevo."
+          : "",
   );
 
   async function onSubmit(e: React.FormEvent) {

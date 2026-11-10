@@ -8,7 +8,9 @@ import "../portal.css";
 
 export default async function PortalLayout({ children, drawer }: { children: React.ReactNode; drawer: React.ReactNode }) {
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  // El proxy valida el token localmente; getUser() consulta a Supabase. Si la sesión ya no existe allá, el
+  // proxy seguiría mandando /login → / en bucle. Con ?error=sesion el login se muestra aunque quede la cookie.
+  if (!user) redirect("/login?error=sesion");
   if (await needsMfa()) redirect("/verificar-2fa");
 
   // Debe existir en public.users y estar activo (RLS ya lo exige para leer datos).
