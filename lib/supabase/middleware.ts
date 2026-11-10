@@ -32,9 +32,12 @@ export async function updateSession(request: NextRequest) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
-  if (user && path === "/login") {
+  // Con ?error=... se muestra el login aunque haya sesión: si no, "sin-acceso" rebota entre / y /login en bucle
+  // (el layout no puede borrar la cookie al hacer signOut desde un Server Component).
+  if (user && path === "/login" && !request.nextUrl.searchParams.has("error")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
+    url.search = "";
     return NextResponse.redirect(url);
   }
   return response;

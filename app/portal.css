@@ -8,9 +8,9 @@
 }
 
 .pv-main {
-  padding: 30px 40px 64px;
+  padding: 30px 28px 64px;
   min-width: 0;
-  max-width: 1320px;
+  max-width: 1800px;
   width: 100%;
 }
 @media (max-width: 760px) {

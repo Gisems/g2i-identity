@@ -21,7 +21,11 @@ export default function ActualizarClavePage() {
     const { error } = await createClient().auth.updateUser({ password });
     if (error) {
       setLoading(false);
-      return setError("No se pudo actualizar la contraseña.");
+      return setError(
+        error.code === "weak_password"
+          ? "La contraseña no cumple los requisitos (mayúsculas, minúsculas, números y un símbolo como ! @ # $). Evita claves comunes."
+          : "No se pudo actualizar la contraseña.",
+      );
     }
     router.replace("/");
     router.refresh();

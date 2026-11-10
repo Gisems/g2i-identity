@@ -41,6 +41,7 @@ export async function saveInstallmentAction(id: string, _prev: PaymentState, fd:
   if (error) return { error: fail("No se pudo guardar", error) };
 
   revalidatePath("/pagos");
+  revalidatePath("/finanzas", "layout");
   revalidatePath("/clientes", "layout");
   return { ok: true };
 }
@@ -66,6 +67,7 @@ export async function addPaymentAction(_prev: PaymentState, fd: FormData): Promi
   if (error) return { error: fail("No se pudo registrar el pago", error) };
 
   revalidatePath("/pagos");
+  revalidatePath("/finanzas", "layout");
   revalidatePath("/clientes", "layout");
   return { ok: true };
 }

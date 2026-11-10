@@ -22,7 +22,13 @@ export default function RecuperarPage() {
       redirectTo: `${window.location.origin}/auth/callback?next=/actualizar-clave`,
     });
     setLoading(false);
-    if (error) return setError("No pudimos enviar el correo. Intenta de nuevo en unos minutos.");
+    if (error) {
+      return setError(
+        error.code === "over_email_send_rate_limit"
+          ? "Se enviaron demasiados correos seguidos. Espera una hora e inténtalo de nuevo."
+          : "No pudimos enviar el correo. Intenta de nuevo en unos minutos.",
+      );
+    }
     setSent(true);
   }
 
