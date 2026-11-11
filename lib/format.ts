@@ -1,8 +1,13 @@
 export const money = (n: number | null | undefined, currency = "PEN") =>
   new Intl.NumberFormat("es-PE", { style: "currency", currency }).format(Number(n ?? 0));
 
-export const dateShort = (d: string | null | undefined) =>
-  d ? new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeZone: "America/Lima" }).format(new Date(d)) : "—";
+// Una fecha "YYYY-MM-DD" (columna `date`) se parsea como medianoche UTC; formatearla en Lima la
+// movería al día anterior. Para esas fechas se formatea en UTC; los timestamps siguen en Lima.
+export const dateShort = (d: string | null | undefined) => {
+  if (!d) return "—";
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(d);
+  return new Intl.DateTimeFormat("es-PE", { dateStyle: "medium", timeZone: dateOnly ? "UTC" : "America/Lima" }).format(new Date(d));
+};
 
 export const dateTime = (d: string | null | undefined) =>
   d
